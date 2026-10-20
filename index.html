@@ -148,6 +148,9 @@ if(p.lang)document.documentElement.lang=p.lang;}catch(e){}})();
     <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
       <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
     </symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.6"/>
+    </symbol>
     <!-- gradients for product photo illustrations -->
     <linearGradient id="gMetal" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" style="stop-color:var(--line-strong)"/>
@@ -274,26 +277,6 @@ if(p.lang)document.documentElement.lang=p.lang;}catch(e){}})();
   </defs>
 </svg>
 
-<header class="topbar">
-  <div class="tb-brand" onclick="go('home')">
-    <span class="logo-mark"><svg class="ic" style="width:17px;height:17px;"><use href="#i-phone"/></svg></span>
-    <span class="tb-brand-text">PHONEX</span>
-  </div>
-
-  <nav class="tb-nav">
-    <button class="tb-item navlink" data-page="home" onclick="go('home')"><svg class="ic"><use href="#i-home"/></svg><span data-i18n="nav_home">Bosh sahifa</span></button>
-    <button class="tb-item navlink" data-page="katalog" onclick="go('katalog')"><svg class="ic"><use href="#i-grid"/></svg><span data-i18n="nav_catalog">Mahsulotlar</span></button>
-    <button class="tb-item navlink" data-page="savat" onclick="go('savat')"><svg class="ic"><use href="#i-cart"/></svg><span data-i18n="nav_cart">Savat</span><span class="tb-badge" id="cartCountTop">0</span></button>
-    <button class="tb-item" onclick="toggleAI(true)"><svg class="ic"><use href="#i-chat"/></svg><span>AI Yordamchi</span></button>
-    <button class="tb-item navlink" data-page="profil" onclick="go('profil')"><svg class="ic"><use href="#i-user"/></svg><span data-i18n="nav_profile">Profil</span></button>
-  </nav>
-
-  <div class="tb-actions">
-    <button class="tb-icon-btn" id="topTheme" title="Mavzu"><svg class="ic"><use href="#i-moon"/></svg></button>
-    <button class="tb-icon-btn" onclick="go('sevimlilar')" title="Sevimlilar"><svg class="ic"><use href="#i-heart"/></svg><span class="tb-badge" id="favCountTop">0</span></button>
-  </div>
-</header>
-
 <div class="mobile-head">
   <button class="mh-btn" id="menuBtn" aria-label="Menyu"><svg class="ic"><use href="#i-menu"/></svg></button>
   <div class="mh-logo" onclick="go('home')"><span class="logo-mark"><svg class="ic" style="width:16px;height:16px;"><use href="#i-phone"/></svg></span><span class="mh-logo-text">PHONEX</span></div>
@@ -331,6 +314,7 @@ if(p.lang)document.documentElement.lang=p.lang;}catch(e){}})();
 
     <div class="sb-group">
       <div class="sb-label" data-i18n="g_info">MA'LUMOT</div>
+      <button class="sb-item" onclick="toggleAI(true);toggleSidebar(false);"><svg class="ic"><use href="#i-chat"/></svg><span data-i18n="nav_ai">AI Yordamchi</span></button>
       <button class="sb-item navlink" data-page="aloqa" onclick="go('aloqa')"><svg class="ic"><use href="#i-headset"/></svg><span data-i18n="nav_contact">Aloqa</span></button>
     </div>
 
@@ -372,20 +356,7 @@ if(p.lang)document.documentElement.lang=p.lang;}catch(e){}})();
           <button class="btn btn-ghost" onclick="go('builds')" data-i18n="cta_builds">Tayyor to'plamlar</button>
         </div>
       </div>
-      <div class="hero-visual reveal" style="animation-delay:.1s;">
-        <svg viewBox="0 0 420 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Telefon va aksessuarlarni bog'lovchi sxema">
-          <rect x="140" y="145" width="140" height="90" rx="4" class="node-box"/>
-          <text x="210" y="200" text-anchor="middle" class="node-label" font-size="12" font-weight="600" fill="var(--fg)">PHONEX</text>
-          <rect x="10" y="10" width="100" height="66" rx="4" class="node-box"/><use href="#photo-phone" x="14" y="14" width="92" height="58"/>
-          <path d="M65 76 L65 110 L150 110 L150 145" class="trace trace-live"/><circle cx="150" cy="145" r="3" class="node-pad"/>
-          <rect x="310" y="10" width="100" height="66" rx="4" class="node-box"/><use href="#photo-headset" x="314" y="14" width="92" height="58"/>
-          <path d="M355 76 L355 110 L270 110 L270 145" class="trace trace-live"/><circle cx="270" cy="145" r="3" class="node-pad"/>
-          <rect x="10" y="304" width="100" height="66" rx="4" class="node-box"/><use href="#photo-psu" x="14" y="308" width="92" height="58"/>
-          <path d="M65 304 L65 260 L150 260 L150 235" class="trace trace-live"/><circle cx="150" cy="235" r="3" class="node-pad"/>
-          <rect x="310" y="304" width="100" height="66" rx="4" class="node-box"/><use href="#photo-case" x="314" y="308" width="92" height="58"/>
-          <path d="M355 304 L355 260 L270 260 L270 235" class="trace trace-live"/><circle cx="270" cy="235" r="3" class="node-pad"/>
-        </svg>
-      </div>
+      <div class="hero-visual hero-photos reveal" id="heroPhotos" style="animation-delay:.1s;"></div>
     </div>
     <div class="wrap">
       <div class="stats">
@@ -717,14 +688,25 @@ if(p.lang)document.documentElement.lang=p.lang;}catch(e){}})();
   </div>
 </footer>
 
+<!-- Mahsulot tafsilotlari oynasi -->
+<div class="pd" id="pd" aria-hidden="true">
+  <div class="pd-backdrop" onclick="closeProduct()"></div>
+  <div class="pd-card" role="dialog" aria-modal="true" aria-labelledby="pdTitle">
+    <button class="pd-close" onclick="closeProduct()" aria-label="Yopish"><svg class="ic"><use href="#i-close"/></svg></button>
+    <div class="pd-body" id="pdBody"></div>
+  </div>
+</div>
+
 <div class="toast-host" id="toastHost"></div>
+<input type="file" id="avatarInput" accept="image/*" hidden onchange="onAvatarFile(this)">
 
 <!-- AI widget -->
+<div class="ai-backdrop" id="aiBackdrop" onclick="toggleAI(false)"></div>
 <button class="ai-fab" id="aiFab" title="AI"><svg class="ic"><use href="#i-chat"/></svg></button>
-<div class="ai-panel" id="aiPanel">
+<div class="ai-panel" id="aiPanel" role="dialog" aria-hidden="true" aria-label="AI">
   <div class="ai-head"><b data-i18n="ai_title">PHONEX AI yordamchi</b><button onclick="toggleAI(false)">✕</button></div>
   <div class="ai-body" id="aiBody">
-    <div class="ai-msg bot">Salom! Men PHONEX'ning AI yordamchisiman. Budjetingiz yoki kerakli telefon turini ayting — masalan "10 million so'mga smartfon" yoki "iPhone" — mos variant topib beraman.</div>
+    <div class="ai-msg bot">Salom! Men PHONEX'ning AI yordamchisiman. Telefonlar haqida so'rang: narx, kamera, batareya, solishtirish yoki budjetga mos variant — yoki pastdagi savollardan birini tanlang.</div>
   </div>
   <div class="ai-input">
     <input id="aiInput" data-i18n-ph="ai_ph" placeholder="Savolingizni yozing..." onkeydown="if(event.key==='Enter')sendAI();">

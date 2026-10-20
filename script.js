@@ -35,12 +35,183 @@ const CAT_IMAGES = {
   'Xotira karta':       IMG('1587033411391-5d9e51cce126'),
   'Tayyor to\'plam':    IMG('1592750475338-74b7b21085ab')
 };
-function photoOf(id, cat){ return (PRODUCT_IMAGES[id] || CAT_IMAGES[cat] || '').trim(); }
+/* =====================================================================
+   AVTOMATIK SURATLAR (SVG)
+   Har bir telefon va to'plam uchun rasm shu yerda chiziladi — internet ham,
+   fayl ham kerak emas. O'z (haqiqiy) rasmingiz bo'lsa, PRODUCT_IMAGES ga
+   yozing: u avtomatik chizmadan ustun turadi.
+   ===================================================================== */
+const PHONE_STYLE = {
+  p1: {c1:'#aecbe0', c2:'#7ea4c4', w1:'#5b8fd8', w2:'#a78bfa', cam:'ios2d', notch:'island'},
+  p2: {c1:'#cfc8bd', c2:'#8f887e', w1:'#2b3a67', w2:'#c05a7a', cam:'ios3',  notch:'island'},
+  p3: {c1:'#4a5058', c2:'#23272d', w1:'#4f46e5', w2:'#ec4899', cam:'ios2d', notch:'notch'},
+  p4: {c1:'#d3cdea', c2:'#9b8fc9', w1:'#0ea5e9', w2:'#6366f1', cam:'s3',    notch:'hole'},
+  p5: {c1:'#bcc0c7', c2:'#6f737c', w1:'#1e3a8a', w2:'#9333ea', cam:'s4',    notch:'hole'},
+  p6: {c1:'#4a5aa0', c2:'#27315f', w1:'#06b6d4', w2:'#3b82f6', cam:'a3',    notch:'hole'},
+  p7: {c1:'#7a5cc4', c2:'#41307f', w1:'#f97316', w2:'#db2777', cam:'v3',    notch:'hole'},
+  p8: {c1:'#eceff3', c2:'#b9c2ce', w1:'#14b8a6', w2:'#3b82f6', cam:'sq3',   notch:'hole'},
+  p9: {c1:'#ffd43b', c2:'#d9a400', w1:'#111827', w2:'#4b5563', cam:'v3',    notch:'hole'},
+  p25:{c1:'#a6d8d3', c2:'#5eaaa3', w1:'#0ea5e9', w2:'#22c55e', cam:'ios2v', notch:'island'},
+  p26:{c1:'#dcc0a0', c2:'#a98763', w1:'#7c3aed', w2:'#f97316', cam:'ios3',  notch:'island'},
+  p27:{c1:'#f3e6aa', c2:'#d4be6a', w1:'#f59e0b', w2:'#ef4444', cam:'ios2d', notch:'island'},
+  p28:{c1:'#f6d0d6', c2:'#e79fb0', w1:'#ec4899', w2:'#8b5cf6', cam:'ios2d', notch:'notch'},
+  p29:{c1:'#c3e6f6', c2:'#7db6d8', w1:'#2563eb', w2:'#06b6d4', cam:'s3',    notch:'hole'},
+  p30:{c1:'#b0b9c7', c2:'#5f6b7d', w1:'#0f172a', w2:'#7c3aed', cam:'s4',    notch:'hole'},
+  p31:{c1:'#cdbff3', c2:'#8e7bd1', w1:'#10b981', w2:'#3b82f6', cam:'a3',    notch:'hole'},
+  p32:{c1:'#4b5873', c2:'#272f45', w1:'#f43f5e', w2:'#f59e0b', cam:'a3',    notch:'hole'},
+  p33:{c1:'#5d626c', c2:'#2b2e34', w1:'#0891b2', w2:'#1d4ed8', cam:'sq3',   notch:'hole'},
+  p34:{c1:'#ad90f2', c2:'#6a4cc4', w1:'#ec4899', w2:'#f59e0b', cam:'v3',    notch:'hole'},
+  p35:{c1:'#86d4a6', c2:'#3f9a69', w1:'#06b6d4', w2:'#6366f1', cam:'v2',    notch:'hole'},
+  p36:{c1:'#c7cbd3', c2:'#7e848f', w1:'#f43f5e', w2:'#6366f1', cam:'sq3',   notch:'hole'},
+  p37:{c1:'#9382ea', c2:'#4e3fb0', w1:'#14b8a6', w2:'#f59e0b', cam:'v3',    notch:'hole'},
+  p38:{c1:'#f4cad2', c2:'#d98fa0', w1:'#f59e0b', w2:'#ec4899', cam:'bar2',  notch:'hole'},
+  p39:{c1:'#35705e', c2:'#16433a', w1:'#10b981', w2:'#0ea5e9', cam:'op',    notch:'hole'}
+};
+const ACC_KIND = {p22:'charger', p17:'case', p19:'case', p18:'glass', p16:'buds', p15:'buds', p13:'buds', p14:'buds', p20:'bank', p21:'bank', p23:'puck', p24:'watch'};
+
+const ART_W = 118, ART_H = 246;
+function artLens(x, y, r){
+  return `<circle cx="${x}" cy="${y}" r="${r + 3}" fill="#0a0b0e" opacity=".6"/>` +
+    `<circle cx="${x}" cy="${y}" r="${r}" fill="#14171c" stroke="#9aa3b2" stroke-opacity=".6" stroke-width="1.6"/>` +
+    `<circle cx="${x}" cy="${y}" r="${(r * 0.55).toFixed(1)}" fill="#1f2f4d"/>` +
+    `<circle cx="${(x - r * 0.25).toFixed(1)}" cy="${(y - r * 0.28).toFixed(1)}" r="${(r * 0.17).toFixed(1)}" fill="#fff" opacity=".8"/>`;
+}
+function artCameras(kind){
+  const X = -ART_W / 2, Y = -ART_H / 2;
+  const plate = (x, y, w, h, rx, fill, op) => `<rect x="${X + x}" y="${Y + y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" fill-opacity="${op}" stroke="#fff" stroke-opacity=".28" stroke-width="1.4"/>`;
+  const lens = (x, y, r) => artLens(X + x, Y + y, r);
+  const flash = (x, y) => `<circle cx="${X + x}" cy="${Y + y}" r="3.2" fill="#ffe7a3" stroke="#fff" stroke-opacity=".5"/>`;
+  switch(kind){
+    case 'ios2d': return plate(9, 9, 56, 56, 15, '#fff', .16) + lens(26, 26, 10) + lens(48, 48, 10) + flash(50, 20);
+    case 'ios2v': return plate(10, 10, 40, 78, 20, '#fff', .16) + lens(30, 30, 10) + lens(30, 66, 10) + flash(62, 22);
+    case 'ios3':  return plate(9, 9, 62, 62, 16, '#fff', .16) + lens(26, 26, 9.5) + lens(26, 54, 9.5) + lens(52, 40, 9.5) + flash(54, 18);
+    case 's3':    return lens(24, 32, 9) + lens(24, 62, 9) + lens(24, 92, 9) + flash(46, 30);
+    case 's4':    return lens(24, 30, 8.5) + lens(24, 58, 8.5) + lens(24, 86, 8.5) + lens(24, 114, 8.5) + flash(46, 28);
+    case 'a3':    return plate(10, 12, 30, 94, 15, '#0d0f12', .85) + lens(25, 30, 8) + lens(25, 59, 8) + lens(25, 88, 8) + flash(52, 28);
+    case 'sq3':   return plate(9, 9, 66, 66, 17, '#0f1115', .9) + lens(28, 28, 12) + lens(28, 57, 8) + lens(55, 28, 8) + flash(56, 58);
+    case 'v3':    return plate(9, 9, 46, 92, 20, '#0f1115', .9) + lens(32, 30, 10) + lens(32, 58, 8.5) + lens(32, 83, 6.5) + flash(68, 24);
+    case 'v2':    return plate(9, 9, 42, 66, 18, '#0f1115', .9) + lens(30, 29, 9.5) + lens(30, 54, 9.5) + flash(64, 22);
+    case 'bar2':  return `<rect x="${X}" y="${Y + 46}" width="${ART_W}" height="40" fill="#0e1115"/><rect x="${X}" y="${Y + 46}" width="${ART_W}" height="40" fill="none" stroke="#fff" stroke-opacity=".14"/>` + lens(34, 66, 11) + lens(68, 66, 11) + flash(94, 66);
+    case 'op':    return `<circle cx="${X + 46}" cy="${Y + 48}" r="38" fill="#0f1217" stroke="#c9ced8" stroke-opacity=".55" stroke-width="2.2"/>` + lens(33, 35, 9.5) + lens(33, 62, 9.5) + lens(60, 48, 9.5) + flash(62, 72);
+    default: return '';
+  }
+}
+function artSideButtons(c){
+  const X = -ART_W / 2, Y = -ART_H / 2;
+  return `<rect x="${X + ART_W - 1.5}" y="${Y + 62}" width="3" height="34" rx="1.5" fill="${c}"/>` +
+    `<rect x="${X - 1.5}" y="${Y + 54}" width="3" height="22" rx="1.5" fill="${c}"/>` +
+    `<rect x="${X - 1.5}" y="${Y + 82}" width="3" height="22" rx="1.5" fill="${c}"/>`;
+}
+function artBack(st){
+  const X = -ART_W / 2, Y = -ART_H / 2;
+  return `<rect x="${X}" y="${Y}" width="${ART_W}" height="${ART_H}" rx="22" fill="url(#b)" stroke="${st.c2}" stroke-width="2"/>` +
+    `<rect x="${X}" y="${Y}" width="${ART_W}" height="${ART_H}" rx="22" fill="url(#gl)"/>` +
+    artCameras(st.cam) + artSideButtons(st.c2);
+}
+function artFront(st){
+  const X = -ART_W / 2, Y = -ART_H / 2;
+  let s = `<rect x="${X}" y="${Y}" width="${ART_W}" height="${ART_H}" rx="22" fill="#0b0c0f" stroke="${st.c2}" stroke-width="2.4"/>`;
+  s += `<rect x="${X + 5}" y="${Y + 5}" width="${ART_W - 10}" height="${ART_H - 10}" rx="17.5" fill="url(#w)"/>`;
+  s += `<circle cx="${X + 84}" cy="${Y + 196}" r="64" fill="#fff" opacity=".10"/><circle cx="${X + 20}" cy="${Y + 120}" r="44" fill="#000" opacity=".08"/>`;
+  s += `<text x="0" y="${Y + 78}" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="34" font-weight="300" fill="#fff">9:41</text>`;
+  for(let r = 0; r < 2; r++){
+    for(let c = 0; c < 4; c++){
+      s += `<rect x="${X + 14 + c * 24}" y="${Y + 142 + r * 28}" width="18" height="18" rx="5.5" fill="#fff" opacity="${(r + c) % 3 === 0 ? .45 : .26}"/>`;
+    }
+  }
+  s += `<rect x="${X + 10}" y="${Y + 204}" width="98" height="24" rx="12" fill="#fff" opacity=".18"/>`;
+  s += `<rect x="-17" y="${Y + ART_H - 12}" width="34" height="3" rx="1.5" fill="#fff" opacity=".7"/>`;
+  if(st.notch === 'island') s += `<rect x="-15" y="${Y + 11}" width="30" height="9" rx="4.5" fill="#000"/>`;
+  else if(st.notch === 'notch') s += `<rect x="-23" y="${Y + 4}" width="46" height="13" rx="6.5" fill="#0b0c0f"/><rect x="-23" y="${Y + 4}" width="46" height="6" fill="#0b0c0f"/>`;
+  else s += `<circle cx="0" cy="${Y + 14}" r="4.2" fill="#000" stroke="#1d2330" stroke-width="1.2"/>`;
+  return s + artSideButtons(st.c2);
+}
+function artDefs(st){
+  return `<defs>` +
+    `<linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${st.c1}"/><stop offset="1" stop-color="${st.c2}"/></linearGradient>` +
+    `<linearGradient id="w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${st.w1}"/><stop offset="1" stop-color="${st.w2}"/></linearGradient>` +
+    `<linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient>` +
+    `<filter id="sh" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>` +
+    `</defs>`;
+}
+function phoneArtSVG(st){
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 330">` + artDefs(st) +
+    `<circle cx="214" cy="168" r="124" fill="${st.c1}" opacity=".16"/>` +
+    `<circle cx="214" cy="168" r="98" fill="none" stroke="${st.c1}" stroke-opacity=".4" stroke-width="2"/>` +
+    `<ellipse cx="216" cy="306" rx="116" ry="9" fill="#000" opacity=".3" filter="url(#sh)"/>` +
+    `<g transform="translate(176 170) rotate(-7)">${artBack(st)}</g>` +
+    `<g transform="translate(258 162) rotate(5)">${artFront(st)}</g>` +
+    `</svg>`;
+}
+
+/* aksessuarlar (markazi 0,0 nuqtada, ~60x60 ichida) */
+function artAcc(kind, st){
+  switch(kind){
+    case 'charger': return `<rect x="-16" y="-14" width="32" height="28" rx="7" fill="#f4f5f7" stroke="#c9ced8" stroke-width="1.6"/><rect x="-8" y="-23" width="5" height="9" rx="1.5" fill="#9aa1ad"/><rect x="3" y="-23" width="5" height="9" rx="1.5" fill="#9aa1ad"/><rect x="-7" y="6" width="14" height="4" rx="2" fill="#dfe3ea"/>`;
+    case 'case':    return `<rect x="-17" y="-30" width="34" height="60" rx="10" fill="${st.c1}" stroke="${st.c2}" stroke-width="2"/><rect x="-12" y="-25" width="19" height="19" rx="6" fill="#0f1115" opacity=".85"/><circle cx="-5" cy="-18" r="4" fill="#1f2f4d"/>`;
+    case 'glass':   return `<rect x="-16" y="-29" width="32" height="58" rx="8" fill="#bfe6ff" fill-opacity=".35" stroke="#7cc0ec" stroke-width="1.8"/><path d="M-9 -10 L9 -26 M-9 6 L9 -10" stroke="#fff" stroke-opacity=".85" stroke-width="2.4" stroke-linecap="round"/>`;
+    case 'buds':    return `<rect x="-21" y="-4" width="42" height="28" rx="13" fill="#f4f5f7" stroke="#c9ced8" stroke-width="1.6"/><path d="M-21 8 H21" stroke="#c9ced8" stroke-width="1.4"/><ellipse cx="-8" cy="-14" rx="4.6" ry="9" fill="#fff" stroke="#c9ced8" stroke-width="1.4"/><ellipse cx="8" cy="-14" rx="4.6" ry="9" fill="#fff" stroke="#c9ced8" stroke-width="1.4"/>`;
+    case 'bank':    return `<rect x="-15" y="-27" width="30" height="54" rx="8" fill="#2c313b" stroke="#444b58" stroke-width="1.6"/><circle cx="-7" cy="-16" r="2.4" fill="#2DD4BF"/><circle cx="0" cy="-16" r="2.4" fill="#2DD4BF"/><circle cx="7" cy="-16" r="2.4" fill="#2DD4BF" opacity=".4"/><rect x="-8" y="2" width="16" height="3" rx="1.5" fill="#fff" opacity=".35"/><rect x="-8" y="9" width="10" height="3" rx="1.5" fill="#fff" opacity=".2"/>`;
+    case 'watch':   return `<rect x="-9" y="-31" width="18" height="62" rx="5" fill="${st.c1}" stroke="${st.c2}" stroke-width="1.6"/><rect x="-16" y="-17" width="32" height="36" rx="10" fill="#14161a" stroke="#9aa3b2" stroke-width="1.6"/><rect x="-12.5" y="-13.5" width="25" height="29" rx="7.5" fill="#1f2f4d"/><rect x="16" y="-6" width="3" height="9" rx="1.5" fill="#9aa3b2"/><rect x="-6" y="-4" width="12" height="3" rx="1.5" fill="#fff" opacity=".7"/>`;
+    case 'puck':    return `<circle cx="0" cy="0" r="17" fill="#f4f5f7" stroke="#c9ced8" stroke-width="1.6"/><circle cx="0" cy="0" r="8" fill="none" stroke="#c9ced8" stroke-width="1.6"/><path d="M0 17 C0 30, 18 24, 20 33" fill="none" stroke="#c9ced8" stroke-width="3" stroke-linecap="round"/>`;
+    default: return '';
+  }
+}
+function bundleArtSVG(def){
+  const st = PHONE_STYLE[def.phone];
+  if(!st) return '';
+  const kinds = [];
+  def.acc.forEach(id => { const k = ACC_KIND[id]; if(k && !kinds.includes(k)) kinds.push(k); });
+  const slots = [[266, 62], [344, 62], [266, 156], [344, 156]];
+  const accs = kinds.slice(0, 4).map((k, i) => `<g transform="translate(${slots[i][0]} ${slots[i][1]})">${artAcc(k, st)}</g>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 220">` + artDefs(st) +
+    `<circle cx="132" cy="112" r="102" fill="${st.c1}" opacity=".16"/>` +
+    `<rect x="224" y="18" width="176" height="184" rx="26" fill="${st.c2}" opacity=".10" stroke="${st.c1}" stroke-opacity=".5" stroke-width="1.4" stroke-dasharray="5 5"/>` +
+    `<ellipse cx="132" cy="206" rx="86" ry="6" fill="#000" opacity=".28" filter="url(#sh)"/>` +
+    `<g transform="translate(104 112) rotate(-8) scale(.58)">${artBack(st)}</g>` +
+    `<g transform="translate(166 108) rotate(5) scale(.58)">${artFront(st)}</g>` +
+    accs + `</svg>`;
+}
+const ART_CACHE = {};
+function artOf(id){
+  if(ART_CACHE[id] !== undefined) return ART_CACHE[id];
+  let svg = '';
+  if(PHONE_STYLE[id]) svg = phoneArtSVG(PHONE_STYLE[id]);
+  else if(typeof BUNDLE_ART !== 'undefined' && BUNDLE_ART[id]) svg = bundleArtSVG(BUNDLE_ART[id]);
+  ART_CACHE[id] = svg ? 'data:image/svg+xml;utf8,' + encodeURIComponent(svg) : '';
+  return ART_CACHE[id];
+}
+
+function photoOf(id, cat){ return (PRODUCT_IMAGES[id] || artOf(id) || CAT_IMAGES[cat] || '').trim(); }
 function visualHTML(id, cat, symbol){
   const url = photoOf(id, cat);
+  const isArt = url.startsWith('data:image/svg');
   const local = url.startsWith('images/');
-  const img = url ? `<img class="prod-img${local ? ' prod-img-cut' : ''}" src="${url}" alt="" loading="lazy" onerror="this.closest('.pv').classList.add('img-fail');this.remove();">` : '';
+  const cls = isArt ? ' prod-img-art' : (local ? ' prod-img-cut' : '');
+  const img = url ? `<img class="prod-img${cls}" src="${url}" alt="" loading="lazy" data-id="${id}" data-cat="${cat}" onerror="imgFail(this)">` : '';
   return `<div class="pv${url ? '' : ' img-fail'}">${img}<svg class="prod-photo"><use href="#${symbol}"/></svg></div>`;
+}
+
+/* rasm topilmasa: 1) avtomatik chizma  2) bo'lim surati  3) zaxira belgi */
+function imgFail(img){
+  const art = artOf(img.dataset.id);
+  if(art && !img.dataset.art && img.getAttribute('src') !== art){
+    img.dataset.art = '1';
+    img.classList.remove('prod-img-cut');
+    img.classList.add('prod-img-art');
+    img.src = art;
+    return;
+  }
+  const fb = CAT_IMAGES[img.dataset.cat];
+  if(fb && !img.dataset.fb && img.getAttribute('src') !== fb){
+    img.dataset.fb = '1';
+    img.classList.remove('prod-img-cut', 'prod-img-art');
+    img.src = fb;
+    return;
+  }
+  const pv = img.closest('.pv');
+  if(pv) pv.classList.add('img-fail');
+  img.remove();
 }
 
 /* ---------------- data ---------------- */
@@ -64,6 +235,21 @@ const PRODUCTS = [
   {id:'p7', name:'Xiaomi Redmi Note 13 Pro', cat:'Smartfonlar', price:3600000},
   {id:'p8', name:'Xiaomi 14 256GB', cat:'Smartfonlar', price:8900000},
   {id:'p9', name:'Xiaomi Poco X6 Pro', cat:'Smartfonlar', price:4100000},
+  {id:'p25', name:'iPhone 16 128GB', cat:'Smartfonlar', price:13900000},
+  {id:'p26', name:'iPhone 16 Pro 256GB', cat:'Smartfonlar', price:19900000},
+  {id:'p27', name:'iPhone 15 Plus 128GB', cat:'Smartfonlar', price:12700000},
+  {id:'p28', name:'iPhone 13 128GB', cat:'Smartfonlar', price:7900000},
+  {id:'p29', name:'Samsung Galaxy S25 256GB', cat:'Smartfonlar', price:13500000},
+  {id:'p30', name:'Samsung Galaxy S25 Ultra 512GB', cat:'Smartfonlar', price:21500000},
+  {id:'p31', name:'Samsung Galaxy A35 128GB', cat:'Smartfonlar', price:3900000},
+  {id:'p32', name:'Samsung Galaxy A15 128GB', cat:'Smartfonlar', price:2100000},
+  {id:'p33', name:'Xiaomi 14T Pro 512GB', cat:'Smartfonlar', price:8700000},
+  {id:'p34', name:'Xiaomi Redmi Note 14 Pro 5G 256GB', cat:'Smartfonlar', price:3900000},
+  {id:'p35', name:'Xiaomi Redmi 13C 128GB', cat:'Smartfonlar', price:1450000},
+  {id:'p36', name:'Xiaomi Poco F6 256GB', cat:'Smartfonlar', price:5300000},
+  {id:'p37', name:'Xiaomi Poco M6 Pro 256GB', cat:'Smartfonlar', price:2700000},
+  {id:'p38', name:'Google Pixel 9 128GB', cat:'Smartfonlar', price:10900000},
+  {id:'p39', name:'OnePlus 12 256GB', cat:'Smartfonlar', price:9500000},
   {id:'p10', name:'iPad 10.9" 64GB', cat:'Planshetlar', price:6900000},
   {id:'p11', name:'iPad Air 11" 128GB', cat:'Planshetlar', price:10800000},
   {id:'p12', name:'Samsung Galaxy Tab A9', cat:'Planshetlar', price:2600000},
@@ -94,6 +280,194 @@ const BUILDS = [
   {id:'b6', tag:'To\'liq to\'plam — telefon + soat + quloqchin', name:'Ultimate Set', featured:false, price:23500000, img:'photo-phone',
     specs:[['Telefon','iPhone 15 Pro'],['Soat','Apple Watch SE'],['Quloqchin','AirPods Pro 2'],['Kafolat',"1 yil rasmiy"]]},
 ];
+
+/* ---------------- yangi 15 ta telefon to'plami (telefon + aksessuarlar) ---------------- */
+const ACC_SHORT = {p22:'20W zaryad', p17:"silikon g'ilof", p19:"charm g'ilof", p18:'9D oyna', p16:'Redmi Buds 5', p15:'Buds FE', p13:'AirPods 4', p14:'AirPods Pro 2', p20:'Anker 20000', p21:'Xiaomi 10000', p23:'MagSafe', p24:'Apple Watch SE'};
+const BUNDLE_DEFS = [
+  {id:'b7',  phone:'p25', acc:['p22','p17','p18'], name:'iPhone 16 Set',          tag:"Yangi avlod iPhone + himoya to'plami"},
+  {id:'b8',  phone:'p26', acc:['p14','p23','p19'], name:'iPhone 16 Pro Set',      tag:"Flagman iPhone + AirPods Pro + MagSafe"},
+  {id:'b9',  phone:'p27', acc:['p22','p19'],       name:'iPhone 15 Plus Set',     tag:"Katta ekranli iPhone + zaryad + g'ilof"},
+  {id:'b10', phone:'p28', acc:['p22','p17','p18'], name:'iPhone 13 Set',          tag:"Hamyonbop iPhone + himoya to'plami"},
+  {id:'b11', phone:'p29', acc:['p15','p22','p17'], name:'Galaxy S25 Set',         tag:"Yangi Galaxy + quloqchin + zaryad"},
+  {id:'b12', phone:'p30', acc:['p15','p20','p22'], name:'Galaxy S25 Ultra Set',   tag:"Ultra + quvvat banki + quloqchin"},
+  {id:'b13', phone:'p31', acc:['p22','p17','p18'], name:'Galaxy A35 Set',         tag:"Kundalik Galaxy + himoya to'plami"},
+  {id:'b14', phone:'p32', acc:['p22','p18','p17'], name:'Galaxy A15 Set',         tag:"Eng hamyonbop Galaxy + himoya"},
+  {id:'b15', phone:'p33', acc:['p16','p22','p17'], name:'Xiaomi 14T Pro Set',     tag:"Leica kamerali telefon + quloqchin"},
+  {id:'b16', phone:'p34', acc:['p22','p18','p16'], name:'Redmi Note 14 Pro Set',  tag:"200 MP telefon + himoya + quloqchin"},
+  {id:'b17', phone:'p35', acc:['p18','p17'],       name:'Redmi 13C Set',          tag:"Eng arzon to'plam: telefon + himoya"},
+  {id:'b18', phone:'p36', acc:['p21','p16','p18'], name:'Poco F6 Set',            tag:"O'yin to'plami: telefon + quvvat banki"},
+  {id:'b19', phone:'p37', acc:['p22','p17','p18'], name:'Poco M6 Pro Set',        tag:"Telefon + zaryad + himoya"},
+  {id:'b20', phone:'p38', acc:['p22','p19','p18'], name:'Pixel 9 Set',            tag:"Toza Android + zaryad + g'ilof"},
+  {id:'b21', phone:'p39', acc:['p20','p22','p17'], name:'OnePlus 12 Set',         tag:"Tezkor zaryad + quvvat banki + g'ilof"}
+];
+/* to'plam suratlari uchun: qaysi telefon va qaysi aksessuarlar chiziladi */
+const BUNDLE_ART = {
+  b1:{phone:'p7', acc:['p22']},
+  b2:{phone:'p6', acc:['p22','p17']},
+  b3:{phone:'p3', acc:['p17']},
+  b4:{phone:'p2', acc:['p22','p19']},
+  b5:{phone:'p5', acc:['p20']},
+  b6:{phone:'p2', acc:['p24','p14']}
+};
+BUNDLE_DEFS.forEach(d => {
+  const ph = PRODUCTS.find(p => p.id === d.phone);
+  const accSum = d.acc.reduce((s, id) => s + PRODUCTS.find(p => p.id === id).price, 0);
+  const save = Math.round(accSum * 0.15 / 10000) * 10000;
+  const storage = ph.name.match(/(\d+)\s?GB$/);
+  BUILDS.push({
+    id: d.id, tag: d.tag, name: d.name, featured: false, price: ph.price + accSum - save, img: 'photo-phone',
+    specs: [
+      ['Telefon', ph.name.replace(/\s?\d+GB$/, '')],
+      ['Xotira', storage ? storage[1] + ' GB' : '—'],
+      ['Aksessuar', d.acc.map(id => ACC_SHORT[id]).join(' + ')],
+      ['Tejash', String(save).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + " so'm"]
+    ]
+  });
+  BUNDLE_ART[d.id] = {phone: d.phone, acc: d.acc};
+});
+
+/* ---------------- mahsulot tafsilotlari (modal) ---------------- */
+const PRODUCT_INFO = {
+  p1:{desc:"Dynamic Island, USB-C va 48 MP asosiy kamerali yangilangan iPhone. Kundalik foydalanish uchun ishonchli va tezkor tanlov.",
+    specs:[["Ekran","6.1 dyuym Super Retina XDR OLED"],["Protsessor","Apple A16 Bionic"],["Operativ xotira","6 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","48 MP + 12 MP ultra keng"],["Old kamera","12 MP"],["Port","USB-C"],["Tizim","iOS 17"]]},
+  p2:{desc:"Titan korpusli flagman. 120 Hz ProMotion ekran, 3x optik zoom va professional video imkoniyatlari.",
+    specs:[["Ekran","6.1 dyuym Super Retina XDR OLED, 120 Hz"],["Protsessor","Apple A17 Pro"],["Operativ xotira","8 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","48 MP + 12 MP 3x tele + 12 MP ultra keng"],["Old kamera","12 MP"],["Korpus","Titan"],["Port","USB-C (USB 3)"],["Tizim","iOS 17"]]},
+  p3:{desc:"Ishonchli va hamyonbop iPhone: yorqin OLED ekran, ikki kamerali tizim va uzoq muddatli yangilanishlar.",
+    specs:[["Ekran","6.1 dyuym Super Retina XDR OLED"],["Protsessor","Apple A15 Bionic"],["Operativ xotira","6 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","12 MP + 12 MP ultra keng"],["Old kamera","12 MP"],["Port","Lightning"],["Tizim","iOS 16"]]},
+  p4:{desc:"Ixcham flagman: yorqin 120 Hz ekran, kuchli protsessor va Galaxy AI imkoniyatlari.",
+    specs:[["Ekran","6.2 dyuym Dynamic AMOLED 2X, 120 Hz"],["Protsessor","Exynos 2400 / Snapdragon 8 Gen 3 (hududga qarab)"],["Operativ xotira","8 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","50 MP + 12 MP ultra keng + 10 MP 3x tele"],["Old kamera","12 MP"],["Batareya","4000 mAh, 25W tezkor zaryad"],["Tizim","Android 14, One UI 6.1"]]},
+  p5:{desc:"Samsungning eng kuchli smartfoni: titan korpus, S Pen, 200 MP kamera va katta QHD+ ekran.",
+    specs:[["Ekran","6.8 dyuym QHD+ Dynamic AMOLED 2X, 120 Hz"],["Protsessor","Snapdragon 8 Gen 3 for Galaxy"],["Operativ xotira","12 GB"],["Doimiy xotira","512 GB"],["Asosiy kamera","200 MP + 50 MP 5x tele + 10 MP 3x tele + 12 MP ultra keng"],["Old kamera","12 MP"],["Batareya","5000 mAh, 45W tezkor zaryad"],["S Pen","Mavjud"],["Tizim","Android 14, One UI 6.1"]]},
+  p6:{desc:"O'rta segmentning eng yaxshilaridan biri: Super AMOLED ekran, sig'imli batareya va yaxshi kamera.",
+    specs:[["Ekran","6.6 dyuym Super AMOLED, 120 Hz"],["Protsessor","Exynos 1480"],["Operativ xotira","8 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","50 MP + 12 MP ultra keng + 5 MP makro"],["Old kamera","32 MP"],["Batareya","5000 mAh, 25W tezkor zaryad"],["Tizim","Android 14, One UI 6.1"]]},
+  p7:{desc:"Narxiga nisbatan juda kuchli: 200 MP kamera, 120 Hz AMOLED ekran va tezkor zaryad.",
+    specs:[["Ekran","6.67 dyuym AMOLED, 120 Hz"],["Protsessor","Helio G99-Ultra (4G) / Snapdragon 7s Gen 2 (5G)"],["Doimiy xotira","256 GB"],["Asosiy kamera","200 MP"],["Old kamera","16 MP"],["Batareya","5100 mAh, 67W tezkor zaryad"],["Tizim","Android 13, MIUI 14 / HyperOS"]]},
+  p8:{desc:"Leica kamerali ixcham flagman: Snapdragon 8 Gen 3, juda tez zaryad va premium sifat.",
+    specs:[["Ekran","6.36 dyuym LTPO AMOLED, 120 Hz"],["Protsessor","Snapdragon 8 Gen 3"],["Operativ xotira","12 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","Leica 50 MP uch kamerali tizim"],["Old kamera","32 MP"],["Batareya","4610 mAh, 90W simli / 50W simsiz zaryad"],["Tizim","Android 14, HyperOS"]]},
+  p9:{desc:"O'yinlar va kundalik ishlar uchun: kuchli Dimensity protsessor, silliq AMOLED ekran va tezkor zaryad.",
+    specs:[["Ekran","6.67 dyuym AMOLED, 120 Hz"],["Protsessor","Dimensity 8300-Ultra"],["Doimiy xotira","256 GB"],["Asosiy kamera","64 MP (OIS) + 8 MP ultra keng + 2 MP makro"],["Old kamera","16 MP"],["Batareya","5000 mAh, 67W tezkor zaryad"],["Tizim","Android 14, HyperOS"]]},
+  p10:{desc:"O'qish, kino va kundalik ishlar uchun yorqin planshet. USB-C portli yangi dizayn.",
+    specs:[["Ekran","10.9 dyuym Liquid Retina"],["Protsessor","Apple A14 Bionic"],["Doimiy xotira","64 GB"],["Asosiy kamera","12 MP"],["Old kamera","12 MP (landshaft joylashuvda)"],["Port","USB-C"],["Tizim","iPadOS"]]},
+  p11:{desc:"Yengil va kuchli planshet: M2 chip, Liquid Retina ekran va Apple Pencil Pro qo'llab-quvvatlashi.",
+    specs:[["Ekran","11 dyuym Liquid Retina"],["Protsessor","Apple M2"],["Doimiy xotira","128 GB"],["Asosiy kamera","12 MP"],["Old kamera","12 MP"],["Port","USB-C"],["Qalam","Apple Pencil Pro"],["Tizim","iPadOS"]]},
+  p12:{desc:"Oila uchun hamyonbop planshet: kitob o'qish, video ko'rish va bolalar uchun qulay.",
+    specs:[["Ekran","8.7 dyuym LCD"],["Protsessor","Helio G99"],["Operativ xotira","4 GB"],["Doimiy xotira","64 GB"],["Asosiy kamera","8 MP"],["Old kamera","2 MP"],["Batareya","5100 mAh"],["Tizim","Android"]]},
+  p13:{desc:"Yangi dizayndagi AirPods: qulay o'tirish, aniq tovush va iPhone bilan bir zumda ulanish.",
+    specs:[["Chip","Apple H2"],["Ulanish","Bluetooth"],["Zaryad porti","USB-C"],["Ish vaqti","5 soatgacha (g'ilof bilan 30 soatgacha)"],["Himoya","IP54 (quloqchin va g'ilof)"]]},
+  p14:{desc:"Faol shovqin bekor qilish, Adaptive Audio va sifatli tovush. Eng yaxshi simsiz quloqchinlardan biri.",
+    specs:[["Chip","Apple H2"],["Shovqin bekor qilish","Faol (ANC) + Shaffoflik rejimi"],["Ulanish","Bluetooth"],["Ish vaqti","6 soatgacha (g'ilof bilan 30 soatgacha)"],["Zaryad","USB-C / MagSafe"],["Himoya","IP54"]]},
+  p15:{desc:"Samsung telefonlari bilan mukammal ishlaydi: shovqin bekor qilish va qulay shakl.",
+    specs:[["Shovqin bekor qilish","Faol (ANC)"],["Ulanish","Bluetooth 5.2"],["Ish vaqti","6 soatgacha (g'ilof bilan 21 soatgacha)"],["Himoya","IPX2"]]},
+  p16:{desc:"Hamyonbop narxda shovqin bekor qilish va uzoq ishlash vaqtiga ega quloqchin.",
+    specs:[["Shovqin bekor qilish","Faol (ANC), 46 dB gacha"],["Ulanish","Bluetooth 5.3"],["Ish vaqti","10 soatgacha (g'ilof bilan 40 soatgacha)"],["Dinamik","12.4 mm"]]},
+  p17:{desc:"Telefonni tushish va tirnalishdan himoya qiladigan yumshoq, yengil silikon g'ilof.",
+    specs:[["Material","Silikon"],["Turi","Universal"],["Himoya","Zarbadan va tirnalishdan"]]},
+  p18:{desc:"Ekranni tirnalish va zarbalardan asraydigan mustahkam 9D himoya oynasi.",
+    specs:[["Turi","Himoya oynasi 9D"],["Qoplama","Barmoq izini kamaytiradi"],["Qattiqlik","9H"]]},
+  p19:{desc:"Klassik va hashamatli ko'rinishdagi charmli g'ilof. Telefonni ishonchli himoya qiladi.",
+    specs:[["Material","Charm"],["Himoya","Zarbadan va tirnalishdan"],["Uslub","Klassik"]]},
+  p20:{desc:"Telefonni bir necha marta to'liq zaryadlaydigan katta sig'imli quvvat banki.",
+    specs:[["Sig'im","20000 mAh"],["Port","USB-C, USB-A"],["Tezkor zaryad","Power Delivery"],["Brend","Anker"]]},
+  p21:{desc:"Yengil va ixcham quvvat banki. Sayohat va kundalik foydalanish uchun qulay.",
+    specs:[["Sig'im","10000 mAh"],["Port","USB-C, USB-A"],["Tezkor zaryad","18W gacha"],["Brend","Xiaomi"]]},
+  p22:{desc:"Telefonni tez zaryadlaydigan ixcham 20W zaryadlovchi adapter.",
+    specs:[["Quvvat","20W"],["Port","USB-C"],["Texnologiya","Power Delivery (tezkor zaryad)"]]},
+  p23:{desc:"Kabelsiz qulaylik: telefonni qo'yib qo'ysangiz bas, zaryadlanaveradi. MagSafe bilan magnit orqali mahkam ushlanadi.",
+    specs:[["Turi","Simsiz zaryadlovchi"],["Standart","MagSafe"],["Quvvat","15W gacha"],["Ulanish","USB-C"]]},
+  p24:{desc:"Salomatlik, faollik va bildirishnomalarni kuzatuvchi aqlli soat. iPhone bilan to'liq mos.",
+    specs:[["Chip","Apple S8"],["Ekran","Retina LTPO OLED"],["Ish vaqti","18 soatgacha"],["Suvga chidamlilik","50 metrgacha"],["Sensorlar","Yurak urishi, tushish va avariya aniqlash"],["Mos","iPhone (iOS)"]]}
+};
+
+/* ---------------- yangi qo'shilgan 15 ta telefon: tafsilotlar ---------------- */
+Object.assign(PRODUCT_INFO, {
+  p25:{desc:"Camera Control tugmasi, kuchli A18 chipi va yangi vertikal kamera bloki bilan yangi avlod iPhone.",
+    specs:[["Ekran","6.1 dyuym Super Retina XDR OLED"],["Protsessor","Apple A18"],["Operativ xotira","8 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","48 MP Fusion + 12 MP ultra keng"],["Old kamera","12 MP"],["Port","USB-C"],["Tizim","iOS 18"]]},
+  p26:{desc:"Titan korpus, 120 Hz ProMotion ekran, 5x tele kamera va professional video imkoniyatlari.",
+    specs:[["Ekran","6.3 dyuym Super Retina XDR OLED, 120 Hz"],["Protsessor","Apple A18 Pro"],["Operativ xotira","8 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","48 MP Fusion + 48 MP ultra keng + 12 MP 5x tele"],["Old kamera","12 MP"],["Korpus","Titan"],["Port","USB-C (USB 3)"],["Tizim","iOS 18"]]},
+  p27:{desc:"Katta ekran va uzoq ishlaydigan batareya: iPhone 15 ning kattaroq varianti.",
+    specs:[["Ekran","6.7 dyuym Super Retina XDR OLED"],["Protsessor","Apple A16 Bionic"],["Operativ xotira","6 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","48 MP + 12 MP ultra keng"],["Old kamera","12 MP"],["Port","USB-C"],["Tizim","iOS 17"]]},
+  p28:{desc:"Hamyonbop narxdagi ishonchli iPhone: yorqin OLED ekran va ikki kamerali tizim.",
+    specs:[["Ekran","6.1 dyuym Super Retina XDR OLED"],["Protsessor","Apple A15 Bionic"],["Operativ xotira","4 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","12 MP + 12 MP ultra keng"],["Old kamera","12 MP"],["Port","Lightning"],["Tizim","iOS 15"]]},
+  p29:{desc:"Ixcham va tezkor flagman: yorqin 120 Hz ekran, eng yangi Snapdragon chipi va Galaxy AI.",
+    specs:[["Ekran","6.2 dyuym Dynamic AMOLED 2X, 120 Hz"],["Protsessor","Snapdragon 8 Elite for Galaxy"],["Operativ xotira","12 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","50 MP + 12 MP ultra keng + 10 MP 3x tele"],["Old kamera","12 MP"],["Batareya","4000 mAh, 25W tezkor zaryad"],["Tizim","Android 15, One UI 7"]]},
+  p30:{desc:"Samsungning eng kuchli smartfoni: titan korpus, S Pen, 200 MP kamera va katta QHD+ ekran.",
+    specs:[["Ekran","6.9 dyuym QHD+ Dynamic AMOLED 2X, 120 Hz"],["Protsessor","Snapdragon 8 Elite for Galaxy"],["Operativ xotira","12 GB"],["Doimiy xotira","512 GB"],["Asosiy kamera","200 MP + 50 MP 5x tele + 10 MP 3x tele + 50 MP ultra keng"],["Old kamera","12 MP"],["Batareya","5000 mAh, 45W tezkor zaryad"],["S Pen","Mavjud"],["Tizim","Android 15, One UI 7"]]},
+  p31:{desc:"Hamyonbop narxda Super AMOLED ekran, sig'imli batareya va ishonchli kamera.",
+    specs:[["Ekran","6.6 dyuym Super AMOLED, 120 Hz"],["Protsessor","Exynos 1380"],["Operativ xotira","8 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","50 MP + 8 MP ultra keng + 5 MP makro"],["Old kamera","13 MP"],["Batareya","5000 mAh, 25W tezkor zaryad"],["Tizim","Android 14, One UI 6.1"]]},
+  p32:{desc:"Eng hamyonbop Galaxy: Super AMOLED ekran va kun bo'yi yetadigan sig'imli batareya.",
+    specs:[["Ekran","6.5 dyuym Super AMOLED, 90 Hz"],["Protsessor","MediaTek Helio G99"],["Operativ xotira","4 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","50 MP + 5 MP ultra keng + 2 MP makro"],["Old kamera","13 MP"],["Batareya","5000 mAh, 25W tezkor zaryad"],["Tizim","Android 14, One UI 6"]]},
+  p33:{desc:"Leica kamerali kuchli smartfon: 144 Hz ekran va 120W juda tezkor zaryad.",
+    specs:[["Ekran","6.67 dyuym AMOLED, 144 Hz"],["Protsessor","Dimensity 9300+"],["Operativ xotira","12 GB"],["Doimiy xotira","512 GB"],["Asosiy kamera","Leica 50 MP + 50 MP 2.6x tele + 12 MP ultra keng"],["Old kamera","32 MP"],["Batareya","5000 mAh, 120W tezkor zaryad"],["Tizim","Android 14, HyperOS"]]},
+  p34:{desc:"200 MP kamera, yorqin AMOLED ekran va tezkor zaryad — o'rta narx segmentida kuchli tanlov.",
+    specs:[["Ekran","6.67 dyuym AMOLED, 120 Hz"],["Protsessor","Dimensity 7300-Ultra"],["Operativ xotira","8 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","200 MP + 8 MP ultra keng + 2 MP makro"],["Old kamera","20 MP"],["Batareya","5110 mAh, 45W tezkor zaryad"],["Tizim","Android 14, HyperOS"]]},
+  p35:{desc:"Eng arzon variantlardan biri: katta ekran, sig'imli batareya va kundalik ishlar uchun yetarli.",
+    specs:[["Ekran","6.74 dyuym LCD, 90 Hz"],["Protsessor","MediaTek Helio G85"],["Operativ xotira","4 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","50 MP + 2 MP"],["Old kamera","5 MP"],["Batareya","5000 mAh, 18W zaryad"],["Tizim","Android 13, MIUI 14"]]},
+  p36:{desc:"O'yin uchun yaratilgan: Snapdragon 8s Gen 3, 120 Hz AMOLED ekran va 90W tezkor zaryad.",
+    specs:[["Ekran","6.67 dyuym AMOLED, 120 Hz"],["Protsessor","Snapdragon 8s Gen 3"],["Operativ xotira","8 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","50 MP (OIS) + 8 MP ultra keng"],["Old kamera","20 MP"],["Batareya","5000 mAh, 90W tezkor zaryad"],["Tizim","Android 14, HyperOS"]]},
+  p37:{desc:"Narxiga nisbatan juda yaxshi: AMOLED ekran, OIS kamera va 67W tezkor zaryad.",
+    specs:[["Ekran","6.67 dyuym AMOLED, 120 Hz"],["Protsessor","MediaTek Helio G99-Ultra"],["Operativ xotira","8 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","64 MP (OIS) + 8 MP ultra keng"],["Old kamera","16 MP"],["Batareya","5000 mAh, 67W tezkor zaryad"],["Tizim","Android 14, HyperOS"]]},
+  p38:{desc:"Google AI imkoniyatlari, toza Android va uzoq muddatli yangilanishlar bilan flagman.",
+    specs:[["Ekran","6.3 dyuym Actua OLED, 120 Hz"],["Protsessor","Google Tensor G4"],["Operativ xotira","12 GB"],["Doimiy xotira","128 GB"],["Asosiy kamera","50 MP + 48 MP ultra keng"],["Old kamera","10.5 MP"],["Batareya","4700 mAh, 27W tezkor zaryad"],["Tizim","Android 14 (7 yillik yangilanish)"]]},
+  p39:{desc:"Flagman tezligi, Hasselblad kamera va 100W juda tezkor zaryad — yirik batareya bilan.",
+    specs:[["Ekran","6.82 dyuym LTPO AMOLED QHD+, 120 Hz"],["Protsessor","Snapdragon 8 Gen 3"],["Operativ xotira","12 GB"],["Doimiy xotira","256 GB"],["Asosiy kamera","Hasselblad 50 MP + 64 MP 3x tele + 48 MP ultra keng"],["Old kamera","32 MP"],["Batareya","5400 mAh, 100W simli / 50W simsiz zaryad"],["Tizim","Android 14, OxygenOS 14"]]}
+});
+
+function openProduct(id, ev){
+  if(ev && ev.target.closest('button, a, input, textarea')) return;
+  const it = catalogItemInfo(id);
+  if(!it) return;
+  const info = PRODUCT_INFO[id];
+  const build = BUILDS.find(b => b.id === id);
+  const specs = info ? info.specs : (build ? build.specs : []);
+  const desc = info ? info.desc : (build ? build.tag : '');
+  const photo = build ? (build.img || 'photo-phone') : (CAT_PHOTO[it.cat] || 'photo-phone');
+  const fav = isFavorite(id);
+  document.getElementById('pdBody').innerHTML = `
+    <div class="pd-visual">${visualHTML(id, it.cat, photo)}</div>
+    <div class="pd-info">
+      <div class="pd-cat">${it.cat}</div>
+      <h2 id="pdTitle">${it.name}</h2>
+      ${desc ? `<p class="pd-desc">${desc}</p>` : ''}
+      <div class="pd-price mono">${fmt(it.price)}</div>
+      ${specs.length ? `<h3 class="pd-sub">${t('pd_specs')}</h3>
+      <ul class="pd-specs">${specs.map(([k,v]) => `<li><span>${k}</span><b>${v}</b></li>`).join('')}</ul>` : ''}
+      <p class="pd-note">${t('pd_note')}</p>
+      <div class="pd-actions">
+        <button class="btn btn-primary" onclick="pdAdd('${id}')">${t('add_build')}</button>
+        <button class="btn btn-ghost pd-fav ${fav ? 'active' : ''}" onclick="pdFav('${id}', this)" title="${t('fav_add')}"><svg class="ic"><use href="#i-heart"/></svg></button>
+      </div>
+    </div>`;
+  const pd = document.getElementById('pd');
+  pd.classList.add('open');
+  pd.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  const card = pd.querySelector('.pd-card');
+  if(card) card.scrollTop = 0;
+  const closeBtn = pd.querySelector('.pd-close');
+  if(closeBtn) closeBtn.focus({preventScroll:true});
+}
+function closeProduct(){
+  const pd = document.getElementById('pd');
+  if(!pd || !pd.classList.contains('open')) return;
+  pd.classList.remove('open');
+  pd.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+function pdAdd(id){
+  const it = catalogItemInfo(id);
+  if(!it) return;
+  addToCart(it.id, it.name, it.cat, it.price);
+  closeProduct();
+}
+function pdFav(id, btn){
+  toggleFavorite(id, null);
+  const nowFav = isFavorite(id);
+  btn.classList.toggle('active', nowFav);
+  document.querySelectorAll('.heart-btn').forEach(h => {
+    if((h.getAttribute('onclick') || '').includes("'" + id + "'")) h.classList.toggle('active', nowFav);
+  });
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeProduct(); });
 
 /* ---------------- state ---------------- */
 function loadJSON(key, fallback){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
@@ -199,7 +573,8 @@ const I18N = {
     co_err_code:"6 xonali SMS kodni kiriting.", co_err_sum:"To'lov summasi noto'g'ri.",
     co_sms_sent:"Tasdiqlash kodi yuborildi (demo).", co_empty:"Savat bo'sh — avval mahsulot tanlang.",
     co_r_order:"Buyurtma", co_r_date:"Sana", co_r_card:"Karta", co_r_method:"Usul", co_r_paid:"To'landi",
-    theme_short:"Mavzu", lang_name:"O'zbek"
+    theme_short:"Mavzu", lang_name:"O'zbek",
+    pd_specs:"Texnik xususiyatlari", pd_note:"Xususiyatlar modelga va hududga qarab farq qilishi mumkin. Aniq ma'lumot uchun menejerimizga murojaat qiling.", pd_close:"Yopish", nav_ai:"AI Yordamchi", av_choose:"Profil rasmini tanlang", av_upload:"Rasm yuklash", av_change:"Rasmni o'zgartirish", av_remove:"Rasmni o'chirish", av_saved:"Profil rasmi saqlandi.", av_removed:"Profil rasmi o'chirildi.", av_err_type:"Faqat rasm faylini tanlang.", av_err_size:"Rasm hajmi 10 MB dan oshmasin.", av_err_read:"Rasmni o'qib bo'lmadi. Boshqa rasm tanlang."
   },
   ru:{
     search_ph:"Поиск товара...", g_main:"ОСНОВНОЕ", g_info:"ИНФОРМАЦИЯ", g_account:"АККАУНТ",
@@ -291,7 +666,8 @@ const I18N = {
     co_err_code:"Введите 6-значный код.", co_err_sum:"Неверная сумма оплаты.",
     co_sms_sent:"Код подтверждения отправлен (демо).", co_empty:"Корзина пуста — сначала выберите товар.",
     co_r_order:"Заказ", co_r_date:"Дата", co_r_card:"Карта", co_r_method:"Способ", co_r_paid:"Оплачено",
-    theme_short:"Тема", lang_name:"Русский"
+    theme_short:"Тема", lang_name:"Русский",
+    pd_specs:"Характеристики", pd_note:"Характеристики могут отличаться в зависимости от модели и региона. Уточняйте у менеджера.", pd_close:"Закрыть", nav_ai:"AI-помощник", av_choose:"Выберите фото профиля", av_upload:"Загрузить фото", av_change:"Изменить фото", av_remove:"Удалить фото", av_saved:"Фото профиля сохранено.", av_removed:"Фото профиля удалено.", av_err_type:"Выберите файл изображения.", av_err_size:"Размер фото не более 10 МБ.", av_err_read:"Не удалось прочитать фото. Выберите другое."
   },
   en:{
     search_ph:"Search products...", g_main:"MAIN", g_info:"INFO", g_account:"ACCOUNT",
@@ -383,7 +759,8 @@ const I18N = {
     co_err_code:"Enter the 6-digit code.", co_err_sum:"Invalid payment amount.",
     co_sms_sent:"Confirmation code sent (demo).", co_empty:"Your cart is empty — pick a product first.",
     co_r_order:"Order", co_r_date:"Date", co_r_card:"Card", co_r_method:"Method", co_r_paid:"Paid",
-    theme_short:"Theme", lang_name:"English"
+    theme_short:"Theme", lang_name:"English",
+    pd_specs:"Specifications", pd_note:"Specifications may vary by model and region. Ask our manager for details.", pd_close:"Close", nav_ai:"AI assistant", av_choose:"Choose a profile picture", av_upload:"Upload photo", av_change:"Change photo", av_remove:"Remove photo", av_saved:"Profile photo saved.", av_removed:"Profile photo removed.", av_err_type:"Please choose an image file.", av_err_size:"Photo must be under 10 MB.", av_err_read:"Couldn't read that photo. Try another one."
   }
 };
 const LOCALE = {uz:'uz-UZ', ru:'ru-RU', en:'en-US'};
@@ -486,7 +863,7 @@ function renderSidebarUser(){
   if(auth){
     const initial = (auth.name || '?').trim().charAt(0).toUpperCase();
     el.innerHTML = `
-      <div class="sb-ava">${initial}</div>
+      <div class="sb-ava" onclick="go('profil')" style="cursor:pointer;">${avatarInner(auth)}</div>
       <div class="sb-user-info" onclick="go('profil')"><b>${auth.name}${auth.surname ? ' ' + auth.surname : ''}</b><span>${auth.phone}</span></div>
       <button class="sb-icon-btn" onclick="logout()" title="${t('prof_logout')}"><svg class="ic"><use href="#i-logout"/></svg></button>`;
   }else{
@@ -648,8 +1025,8 @@ function toggleFavorite(id, btn){
   toast(nowFav ? t('fav_added') : t('fav_removed'));
   if(document.getElementById('page-sevimlilar').classList.contains('active')) renderFavorites();
 }
-function moveFavToCart(id, name, cat, price){
-  addToCart(id, name, cat, price);
+function moveFavToCart(id){
+  addById(id);
   const i = favorites.indexOf(id);
   if(i >= 0){ favorites.splice(i, 1); saveJSON('phonex_favorites', favorites); updateFavBadge(); }
   go('savat');
@@ -664,14 +1041,14 @@ function renderFavorites(){
     return;
   }
   el.innerHTML = `<div class="prod-grid">${items.map((it,i) => `
-    <div class="prod-card reveal" style="animation-delay:${Math.min(i*0.035,0.4)}s;">
+    <div class="prod-card reveal" style="animation-delay:${Math.min(i*0.035,0.4)}s;" tabindex="0" role="button" onclick="openProduct('${it.id}', event)" onkeydown="if(event.key==='Enter'&&event.target===this)openProduct('${it.id}')">
       <button class="heart-btn active" onclick="toggleFavorite('${it.id}', this)" title="${t('fav_remove')}"><svg class="ic"><use href="#i-heart"/></svg></button>
       <div class="prod-visual">${visualHTML(it.id, it.cat, CAT_PHOTO[it.cat] || 'photo-phone')}</div>
       <div class="prod-cat-tag">${it.cat}</div>
       <div class="prod-name">${it.name}</div>
       <div class="prod-foot">
         <div class="prod-price mono">${fmt(it.price)}</div>
-        <button class="btn btn-primary add-btn" onclick="moveFavToCart('${it.id}','${it.name}','${it.cat}',${it.price})">${t('fav_move_btn')}</button>
+        <button class="btn btn-primary add-btn" onclick="moveFavToCart('${it.id}')">${t('fav_move_btn')}</button>
       </div>
     </div>`).join('')}</div>`;
   playReveal(el);
@@ -748,14 +1125,14 @@ function renderProducts(){
   if(searchTerm) list = list.filter(p => p.name.toLowerCase().includes(searchTerm) || p.cat.toLowerCase().includes(searchTerm));
   document.getElementById('resultCount').textContent = t('found', {n: list.length});
   document.getElementById('prodList').innerHTML = list.map((p,i) => `
-    <div class="prod-card reveal" style="animation-delay:${Math.min(i*0.035,0.4)}s;">
+    <div class="prod-card reveal" style="animation-delay:${Math.min(i*0.035,0.4)}s;" tabindex="0" role="button" onclick="openProduct('${p.id}', event)" onkeydown="if(event.key==='Enter'&&event.target===this)openProduct('${p.id}')">
       <button class="heart-btn ${isFavorite(p.id) ? 'active' : ''}" onclick="toggleFavorite('${p.id}', this)" title="${isFavorite(p.id) ? t('fav_remove') : t('fav_add')}"><svg class="ic"><use href="#i-heart"/></svg></button>
       <div class="prod-visual">${visualHTML(p.id, p.cat, CAT_PHOTO[p.cat] || 'photo-phone')}</div>
       <div class="prod-cat-tag">${p.cat}</div>
       <div class="prod-name">${p.name}</div>
       <div class="prod-foot">
         <div class="prod-price mono">${fmt(p.price)}</div>
-        <button class="btn btn-ghost add-btn" onclick="addToCart('${p.id}','${p.name}','${p.cat}',${p.price})">${t('add')}</button>
+        <button class="btn btn-ghost add-btn" onclick="addById('${p.id}')">${t('add')}</button>
       </div>
     </div>`).join('');
   playReveal(document.getElementById('prodList'));
@@ -765,20 +1142,31 @@ function renderHomeCats(){
   const cats = [...new Set(PRODUCTS.map(p=>p.cat))];
   document.getElementById('homeCats').innerHTML = cats.map((c,i) => `
     <button class="home-cat reveal" style="animation-delay:${i*0.04}s;" onclick="setFilter('${c}');go('katalog');">
-      <svg class="ic"><use href="#${CAT_ICON[c] || 'i-cpu'}"/></svg><span>${c}</span>
+      ${CAT_IMAGES[c] ? `<span class="hc-img"><img src="${CAT_IMAGES[c]}" alt="" loading="lazy" onerror="this.parentNode.remove()"></span>` : ''}
+      <span class="hc-label"><svg class="ic"><use href="#${CAT_ICON[c] || 'i-cpu'}"/></svg><span>${c}</span></span>
+    </button>`).join('');
+}
+function renderHeroPhotos(){
+  const el = document.getElementById('heroPhotos');
+  if(!el) return;
+  const tiles = [{cat:'Smartfonlar', cls:'hp-main'}, {cat:'Simsiz quloqchin', cls:''}, {cat:'Smart soat', cls:''}];
+  el.innerHTML = tiles.map(x => `
+    <button class="hp ${x.cls}" onclick="setFilter('${x.cat}');go('katalog');" aria-label="${x.cat}">
+      <img src="${CAT_IMAGES[x.cat]}" alt="" onerror="this.parentNode.classList.add('img-fail');this.remove();">
+      <span class="hp-cap">${x.cat}</span>
     </button>`).join('');
 }
 
 function renderBuilds(){
   document.getElementById('buildList').innerHTML = BUILDS.map((b,i) => `
-    <div class="build reveal ${b.featured?'featured':''}" style="animation-delay:${i*0.06}s;">
+    <div class="build reveal ${b.featured?'featured':''}" style="animation-delay:${i*0.06}s;" tabindex="0" role="button" onclick="openProduct('${b.id}', event)" onkeydown="if(event.key==='Enter'&&event.target===this)openProduct('${b.id}')">
       <button class="heart-btn ${isFavorite(b.id) ? 'active' : ''}" onclick="toggleFavorite('${b.id}', this)" title="${isFavorite(b.id) ? t('fav_remove') : t('fav_add')}"><svg class="ic"><use href="#i-heart"/></svg></button>
       <div class="build-visual">${visualHTML(b.id, "Tayyor to'plam", b.img || 'photo-phone')}</div>
       <div class="build-tag">${b.tag}</div>
       <h3>${b.name}</h3>
       <ul class="spec-list">${b.specs.map(([k,v])=>`<li>${k} <b>${v}</b></li>`).join('')}</ul>
       <div class="build-price">${fmt(b.price)}</div>
-      <button class="btn ${b.featured?'btn-primary':'btn-ghost'}" onclick="addToCart('${b.id}','${b.name}','Tayyor to\'plam',${b.price})">${t('add_build')}</button>
+      <button class="btn ${b.featured?'btn-primary':'btn-ghost'}" onclick="addById('${b.id}')">${t('add_build')}</button>
     </div>`).join('');
   playReveal(document.getElementById('buildList'));
 }
@@ -814,12 +1202,24 @@ function renderProfile(){
   el.innerHTML = `
     <div class="section-head"><h1>${t('prof_h1')}</h1></div>
     <div class="profile-card">
+      <div class="profile-cover">${CAT_IMAGES['Smartfonlar'] ? `<img src="${CAT_IMAGES['Smartfonlar']}" alt="" onerror="this.remove()">` : ''}</div>
       <div class="profile-head">
-        <div class="profile-avatar">${(auth.name || '?').trim().charAt(0).toUpperCase()}</div>
-        <div>
+        <div class="pa-wrap">
+          <button class="profile-avatar ${auth.avatar ? 'has-img' : ''}" onclick="pickAvatar()" title="${auth.avatar ? t('av_change') : t('av_upload')}" aria-label="${t('av_upload')}">${avatarInner(auth, true)}</button>
+          <button class="pa-cam" onclick="pickAvatar()" aria-label="${t('av_upload')}"><svg class="ic"><use href="#i-camera"/></svg></button>
+        </div>
+        <div class="profile-who">
           <b>${auth.name} ${auth.surname || ''} <span class="tier-badge ${isVip ? 'tier-vip' : 'tier-basic'}">${isVip ? t('tier_vip') : t('tier_basic')}</span></b>
           <span>${auth.phone}</span>
         </div>
+      </div>
+      <div class="av-picker">
+        <div class="av-picker-title">${t('av_choose')}</div>
+        <div class="av-presets">
+          ${AV_PRESETS.map((src, i) => `<button class="av-preset ${auth.avatar === src ? 'active' : ''}" onclick="pickPreset(${i})" aria-label="${i + 1}"><img src="${src}" alt=""></button>`).join('')}
+          <button class="av-preset av-upload" onclick="pickAvatar()" title="${t('av_upload')}" aria-label="${t('av_upload')}"><svg class="ic"><use href="#i-camera"/></svg></button>
+        </div>
+        ${auth.avatar ? `<button class="pa-link danger" onclick="removeAvatar()">${t('av_remove')}</button>` : ''}
       </div>
       <div class="profile-row"><span>${t('f_name')}</span><span>${auth.name}</span></div>
       <div class="profile-row"><span>${t('f_surname')}</span><span>${auth.surname || ''}</span></div>
@@ -855,6 +1255,8 @@ function doLogin(phone){
 }
 function doRegister(name, surname, phone){
   const user = {name, surname, phone};
+  const prev = findUserByPhone(phone);
+  if(prev && prev.avatar) user.avatar = prev.avatar;
   saveUser(user);
   auth = user;
   saveJSON('phonex_auth', auth);
@@ -1052,116 +1454,395 @@ function chipHTML(chips){
 }
 function fmtShort(n){ return (n/1000000).toFixed(n%1000000===0?0:1) + " mln so'm"; }
 
-function generateReply(raw){
-  const t = raw.toLowerCase();
-  const budget = parseBudget(t);
-  const cat = detectCategory(t);
-  const wantsGaming = /(kamera|foto|surat)/.test(t);
-  const wantsOffice = /(byudjet|arzon narx|iqtisodiy)/.test(t);
-  const wantsCheapest = /(arzon|eng arzon|arzoni)/.test(t);
-  const wantsPricey = /(qimmat|kuchli|eng yaxshi|flagman)/.test(t);
-  const wantsBuild = /(to'plam|tayyor|to'liq to'plam)/.test(t);
-  const wantsContact = /(telefon|raqam|manzil|qayerda|bog'lan|boglan|ish vaqti|manzilingiz)/.test(t);
-  const isGreeting = /^(salom|assalom|hi|hello|hey|xayrli)/.test(t.trim());
-  const isThanks = /(rahmat|raxmat|tashakkur)/.test(t);
+/* ---------------- AI yordamchi: telefonlar bo'yicha bilim bazasi ---------------- */
+function aiNorm(s){ return String(s).toLowerCase().replace(/[ʻʼ’‘`´]/g, "'").replace(/\s+/g, ' ').trim(); }
+function aiShort(n, max){ max = max || 24; return n.length > max ? n.slice(0, max) + '…' : n; }
+function addById(id){ const it = catalogItemInfo(id); if(it) addToCart(it.id, it.name, it.cat, it.price); }
 
-  if(isThanks){
-    return {text:"Arzimaydi! Yana savol bo'lsa, bemalol yozavering 🙂", chips:[]};
+const PRODUCT_ALIASES = [
+  ['p2', ['iphone 15 pro', '15 pro']], ['p1', ['iphone 15']], ['p3', ['iphone 14']],
+  ['p5', ['s24 ultra']], ['p4', ['galaxy s24', 's24']], ['p6', ['a55']],
+  ['p7', ['note 13', 'redmi note']], ['p8', ['xiaomi 14']], ['p9', ['poco', 'x6 pro']],
+  ['p11', ['ipad air']], ['p10', ['ipad 10', 'ipad 10.9']], ['p12', ['tab a9', 'galaxy tab']],
+  ['p14', ['airpods pro']], ['p13', ['airpods 4']], ['p15', ['buds fe']], ['p16', ['redmi buds', 'buds 5']],
+  ['p24', ['apple watch', 'watch se']], ['p20', ['anker']], ['p21', ['xiaomi 10000', '10000 mah', '10000mah']],
+  ['p23', ['magsafe']], ['p22', ['20w']], ['p17', ['silikon']], ['p18', ['himoya oyna', ' 9d']], ['p19', ['charmli']],
+  ['p26', ['iphone 16 pro']], ['p25', ['iphone 16']], ['p27', ['iphone 15 plus']], ['p28', ['iphone 13']],
+  ['p30', ['s25 ultra']], ['p29', ['galaxy s25', 's25']], ['p31', ['a35']], ['p32', ['a15']],
+  ['p33', ['14t pro', 'xiaomi 14t', '14t']], ['p34', ['note 14', 'redmi note 14']], ['p35', ['redmi 13c', '13c']],
+  ['p36', ['poco f6']], ['p37', ['m6 pro', 'poco m6']], ['p38', ['pixel 9', 'pixel']], ['p39', ['oneplus 12', 'oneplus', 'one plus']]
+];
+function aiFindProducts(q){
+  const entries = [];
+  PRODUCT_ALIASES.forEach(([id, list]) => list.forEach(a => entries.push([a, id])));
+  entries.sort((x, y) => y[0].length - x[0].length);
+  const found = [];
+  let rest = ' ' + q + ' ';
+  entries.forEach(([a, id]) => {
+    if(rest.includes(a)){ if(!found.includes(id)) found.push(id); rest = rest.split(a).join(' '); }
+  });
+  if(/\bipad\b/.test(q) && !found.includes('p10') && !found.includes('p11')) found.push('p10', 'p11');
+  if(/airpods/.test(q) && !found.includes('p13') && !found.includes('p14')) found.push('p13', 'p14');
+  if(/\bbuds\b/.test(q) && !found.includes('p15') && !found.includes('p16')) found.push('p15', 'p16');
+  return found;
+}
+function aiBrands(q){
+  const b = [];
+  if(/iphone|apple|ayfon/.test(q)) b.push('apple');
+  if(/samsung|galaxy|samsyung/.test(q)) b.push('samsung');
+  if(/xiaomi|redmi|poco/.test(q)) b.push('xiaomi');
+  if(/google|pixel/.test(q)) b.push('google');
+  if(/oneplus|one plus/.test(q)) b.push('oneplus');
+  return b;
+}
+const BRAND_PHONES = {apple:['p1','p2','p3','p25','p26','p27','p28'], samsung:['p4','p5','p6','p29','p30','p31','p32'], xiaomi:['p7','p8','p9','p33','p34','p35','p36','p37'], google:['p38'], oneplus:['p39']};
+const BRAND_INFO = {
+  apple:{name:"iPhone (Apple)", note:"iOS tizimi, uzoq yillar yangilanishlar, kamera va video sifati barqaror; narxi yuqoriroq."},
+  samsung:{name:"Samsung Galaxy", note:"yorqin AMOLED ekranlar, Android'da ko'p imkoniyat, Ultra modelda S Pen."},
+  xiaomi:{name:"Xiaomi / Redmi / Poco", note:"narxiga nisbatan eng kuchli xususiyatlar, juda tezkor zaryad."},
+  google:{name:"Google Pixel", note:"toza Android, kuchli kamera dasturi va uzoq muddatli yangilanishlar."},
+  oneplus:{name:"OnePlus", note:"flagman tezligi, Hasselblad kamera va juda tezkor zaryad."}
+};
+
+function specRows(id, re){
+  const info = PRODUCT_INFO[id];
+  return info ? info.specs.filter(([k]) => re.test(k)) : [];
+}
+function specOf(id, re){ const r = specRows(id, re)[0]; return r ? r[1] : ''; }
+function aiBrief(id){
+  const info = PRODUCT_INFO[id];
+  if(!info) return '';
+  const keys = [/^Ekran/i, /Protsessor|Chip/i, /Doimiy xotira/i, /Asosiy kamera/i, /Batareya|Ish vaqti/i];
+  return keys.map(re => { const r = info.specs.find(([k]) => re.test(k)); return r ? `• ${r[0]}: ${r[1]}` : null; }).filter(Boolean).join('\n');
+}
+function aiProductCard(id){
+  const it = catalogItemInfo(id), info = PRODUCT_INFO[id];
+  return `${it.name} — ${fmt(it.price)}.\n${info ? info.desc : ''}\n${aiBrief(id)}`.trim();
+}
+function aiAddChip(id, label){
+  const it = catalogItemInfo(id);
+  return {label: label || ('+ ' + aiShort(it.name, 22)), action: `aiAdd('${id}')`};
+}
+function aiInfoChip(id){ return {label: 'Batafsil', action: `openProduct('${id}');toggleAI(false);`}; }
+function aiAsk(label, text){ return {label, action: `sendAIText('${esc(text || label)}')`}; }
+
+const AI_ATTRS = [
+  {re: /(kamera|megapiksel|\bmp\b|selfi)/, label: /kamera/i, name: 'kamerasi'},
+  {re: /(batareya|akkumulyator|\bmah\b|zaryad|quvvat)/, label: /Batareya|Ish vaqti|Zaryad/i, name: 'batareyasi'},
+  {re: /(ekran|display|\bhz\b|dyuym|oled)/, label: /Ekran/i, name: 'ekrani'},
+  {re: /(protsessor|chip\b|processor|tezlik|snapdragon|bionic)/, label: /Protsessor|Chip/i, name: 'protsessori'},
+  {re: /(xotira|\bram\b|\bgb\b|hotira)/, label: /xotira/i, name: 'xotirasi'},
+  {re: /(tizim|android|\bios\b)/, label: /Tizim/i, name: 'tizimi'},
+  {re: /(\bport\b|usb|lightning|type-c)/, label: /Port|Zaryad porti/i, name: 'porti'}
+];
+
+const AI_FAQ = [
+  {re: /(yetkaz|dostavka|kuryer|olib ket|qachon keladi|necha kunda)/,
+   text: "Toshkent bo'ylab kuryer 24 soat ichida, bepul yetkazib beradi. Viloyatlarga 2–3 kun ketadi. Xohlasangiz, Yashnobod tumanidagi do'kondan o'zingiz ham olib ketishingiz mumkin."},
+  {re: /(kafolat|garantiya|servis)/,
+   text: "Mahsulotlar rasmiy distribyutorlar orqali, kafolat kartasi bilan sotiladi. Saytimizda 3 yilgacha kafolat va o'z servis markazimiz borligi ko'rsatilgan; aniq muddat mahsulotga qarab farq qilishi mumkin — buyurtmadan oldin menejerimizdan so'rang: +998 97 983 50 70."},
+  {re: /(to'lov|tolov|to'lash|tolash|qanday to'la|uzcard|humo|naqd pul)/,
+   text: "Buyurtma bosqichida Uzcard, Humo, Visa yoki Mastercard kartasi orqali, shuningdek profil balansidan to'lash mumkin. Balansni \"Balans\" sahifasida to'ldirasiz."},
+  {re: /(kredit|muddatli|rassrochka|bo'lib to'la)/,
+   text: "Muddatli to'lov haqida saytda ma'lumot yo'q. Iltimos, menejerimiz bilan bog'laning: +998 97 983 50 70."},
+  {re: /(original|qalbaki|asl mi|asilmi|haqiqiymi)/,
+   text: "Barcha mahsulotlar rasmiy distribyutorlar orqali olinadi va kafolat kartasi bilan beriladi."},
+  {re: /(qaytar|almashtir|vozvrat)/,
+   text: "Qaytarish va almashtirish shartlari buyurtmaga qarab farq qilishi mumkin. Aniq ma'lumotni menejerimiz beradi: +998 97 983 50 70."},
+  {re: /(omborda|mavjudmi|stokda|qolganmi|ranglari|rangi|ranglar)/,
+   text: "Ranglar va omborda qoldiq tez-tez o'zgarib turadi, shuning uchun aniq ma'lumotni buyurtmadan oldin menejerimizdan so'rang: +998 97 983 50 70."}
+];
+
+const AI_CUE = /(nima|anglat|degani|nimaga kerak|qanday|farqi|kerakmi|yetarlimi|qancha|necha|bormi|tushuntir|nimasi)/;
+function aiConcepts(){
+  const hzList = PRODUCTS.filter(p => p.cat === 'Smartfonlar' && /1[2-4]0 Hz/.test(specOf(p.id, /^Ekran/i))).map(p => p.name.replace(/ \d+GB$/, ''));
+  const hz120 = hzList.slice(0, 9).join(', ') + (hzList.length > 9 ? ' va boshqalar' : '');
+  return [
+    {re: /(\bamoled|\boled|\blcd|\bips\b)/,
+     text: "AMOLED/OLED ekranda har bir piksel o'zi yonadi: ranglar yorqin, qora rang chuqur va quvvat tejaladi. LCD (IPS) arzonroq, lekin qora rang kamroq chuqur ko'rinadi. Katalogimizdagi smartfonlarning deyarli hammasida OLED yoki AMOLED ekran bor (eng arzon Redmi 13C kabi modellarda LCD)."},
+    {re: /(\bhz\b|hertz|yangilanish chastota|silliq)/,
+     text: `Hz — ekran sekundiga necha marta yangilanishi. 60 Hz oddiy, 120 Hz esa ancha silliq: skroll va o'yinlar yumshoq ko'rinadi. 120 Hz ekranli telefonlar: ${hz120}.`},
+    {re: /(\bram\b|operativ)/,
+     text: "RAM (operativ xotira) ochiq ilovalar qanchalik tez ishlashiga ta'sir qiladi. Kundalik ishlar uchun 6–8 GB yetarli, og'ir o'yinlar va ko'p vazifa uchun 8–12 GB qulay."},
+    {re: /(necha gb|qancha xotira|doimiy xotira|xotira hajmi|xotira yetarli|128 gb|256 gb|512 gb)/,
+     text: "Doimiy xotira rasm, video va ilovalar uchun. 128 GB ko'pchilik uchun yetarli; ko'p video/foto olsangiz yoki o'yinlar o'rnatsangiz 256 GB va undan ko'pini oling."},
+    {re: /(\bmah\b|batareya sig'im|batareya qancha)/,
+     text: "mAh — batareya sig'imi. 5000 mAh atrofidagi telefonlar odatda bir kun va undan ko'proq ishlaydi, lekin bu ekran va foydalanishga bog'liq. Eng sig'imlilari: Galaxy S24 Ultra, Galaxy A55, Poco X6 Pro va Redmi Note 13 Pro (5000+ mAh)."},
+    {re: /(tezkor zaryad|zaryad tezligi|vatt|\bw\b zaryad|fast charg)/,
+     text: "Vatt (W) qancha yuqori bo'lsa, zaryad shuncha tez. Lekin telefon ham, zaryadlovchi ham shu quvvatni qo'llab-quvvatlashi kerak. Katalogimizda: Xiaomi 14 — 90W, Redmi Note 13 Pro va Poco X6 Pro — 67W, Galaxy S24 Ultra — 45W.",
+     chips: [aiAddChip('p22', '+ 20W zaryadlovchi')]},
+    {re: /(magsafe)/,
+     text: "MagSafe — iPhone orqasiga magnit bilan yopishadigan simsiz zaryad tizimi. Katalogimizda MagSafe zaryadlovchi bor.",
+     chips: [aiAddChip('p23', '+ MagSafe zaryadlovchi')]},
+    {re: /(usb-c|usb c|type-c|typec|lightning)/,
+     text: "iPhone 15 va iPhone 15 Pro USB-C portli, iPhone 14 esa Lightning portli. Samsung va Xiaomi telefonlarida USB-C."},
+    {re: /(\bnfc\b|\besim\b|e-sim|\b5g\b)/,
+     text: "NFC, eSIM va 5G imkoniyatlari model va hududga qarab farq qilishi mumkin. Aniq modelda borligini menejerimizdan so'rang: +998 97 983 50 70."},
+    {re: /(\bios\b|android)/,
+     text: "iOS (iPhone) sodda va barqaror, yangilanishlar uzoq yillar keladi. Android (Samsung, Xiaomi) esa tanlov va sozlamalar ko'p, narxlar keng diapazonda. Qaysi biri qulayligi o'zingizning odatingizga bog'liq."}
+  ];
+}
+
+const AI_USE = [
+  {re: /(kamera|foto|surat|video|tasvir|selfi)/, intro: "Kamerasi eng kuchli telefonlar", ids: ['p30', 'p26', 'p5', 'p2', 'p33', 'p38', 'p39', 'p8'], spec: /Asosiy kamera/i},
+  {re: /(o'yin|oyin|pubg|game|gaming|geym|tez ishlaydigan|kuchli)/, intro: "O'yin va og'ir ilovalar uchun eng kuchli telefonlar", ids: ['p26', 'p30', 'p36', 'p33', 'p39', 'p2', 'p5', 'p9'], spec: /Protsessor/i},
+  {re: /(batareya|uzoq ishlaydigan|akkumulyator)/, intro: "Batareyasi eng sig'imli telefonlar", ids: ['p39', 'p34', 'p7', 'p30', 'p36', 'p9', 'p6'], spec: /Batareya/i},
+  {re: /(talaba|maktab|o'quvchi|bola|farzand)/, intro: "Talaba va o'quvchilar uchun hamyonbop, ishonchli variantlar", ids: ['p35', 'p32', 'p37', 'p31', 'p7', 'p6'], spec: /Ekran/i}
+];
+
+function aiListReply(intro, ids, specRe, budget){
+  let list = ids.filter(id => PRODUCT_INFO[id] || catalogItemInfo(id));
+  if(budget) list = list.filter(id => catalogItemInfo(id).price <= budget);
+  if(!list.length){
+    const cheapest = PRODUCTS.filter(p => p.cat === 'Smartfonlar').sort((a, b) => a.price - b.price)[0];
+    return {
+      text: `${fmtShort(budget)} budjetga bu toifada mos telefon topilmadi. Eng arzon smartfonimiz — ${cheapest.name}, narxi ${fmt(cheapest.price)}.`,
+      chips: [aiAddChip(cheapest.id), aiInfoChip(cheapest.id)]
+    };
   }
+  list = list.slice(0, 4);
+  const lines = list.map(id => {
+    const it = catalogItemInfo(id);
+    const reason = specRe ? specOf(id, specRe) : '';
+    return `• ${it.name} — ${fmt(it.price)}${reason ? ' (' + aiShort(reason, 52) + ')' : ''}`;
+  });
+  return {
+    text: `${intro}${budget ? ' (' + fmtShort(budget) + 'gacha)' : ''}:\n${lines.join('\n')}`,
+    chips: [...list.slice(0, 3).map(id => aiAddChip(id)), {label: "Katalogda ko'rish →", action: "setFilter('Smartfonlar');go('katalog');toggleAI(false);"}]
+  };
+}
+
+function aiBrandSummary(brands){
+  return brands.map(b => {
+    const ids = BRAND_PHONES[b];
+    const prices = ids.map(id => catalogItemInfo(id).price);
+    const lo = Math.min(...prices), hi = Math.max(...prices);
+    return `• ${BRAND_INFO[b].name} (${(lo / 1e6).toFixed(1)} – ${(hi / 1e6).toFixed(1)} mln so'm): ${BRAND_INFO[b].note}`;
+  }).join('\n');
+}
+
+function generateReply(raw){
+  const q = aiNorm(raw);
+  const budget = parseBudget(q);
+  const cat = detectCategory(q);
+  const compareCue = /(farq|solishtir|taqqosla|qaysi biri|qaysi yaxshi|yaxshiroq|\bvs\b|\byoki\b)/.test(q);
+  const wantsBuild = /(to'plam|tayyor)/.test(q);
+  const wantsCheapest = /(eng arzon|arzonrog|arzoni|arzon)/.test(q);
+  const wantsPricey = /(eng qimmat|qimmat|flagman|eng kuchli|eng yaxshi)/.test(q);
+  const askStyle = /(tavsiya|maslahat|qaysi telefon|qaysi smartfon|nima olay|nimani olay|yaxshi telefon|tanlashga yordam)/.test(q);
+  const howChoose = /(qanday tanlay|qanday tanlash|nimaga qarab|tanlash bo'yicha)/.test(q);
+  const isGreeting = /^(salom|assalom|hi|hello|hey|xayrli)/.test(q);
+  const isThanks = /(rahmat|raxmat|tashakkur)/.test(q);
+  const wantsContact = /(telefon raqam|raqamingiz|nomeringiz|manzil|qayerda|qayerdasiz|bog'lan|boglan|ish vaqti|aloqa|lokatsiya|adres|soat nechada)/.test(q);
+
+  if(isThanks) return {text: "Arzimaydi! Yana savol bo'lsa, bemalol yozavering 🙂", chips: []};
+
   if(wantsContact){
     return {
-      text:"Biz bilan bog'lanish: ☎ +998 97 983 50 70 · Toshkent, Yashnobod tumani · Ish vaqti: har kuni 9:00–19:00. To'liq ma'lumot va xabar yuborish uchun \"Aloqa\" sahifasiga o'ting.",
-      chips:[{label:"Aloqa sahifasi →", action:"go('aloqa');toggleAI(false);"}]
+      text: "Biz bilan bog'lanish: ☎ +998 97 983 50 70 · Toshkent, Yashnobod tumani · Ish vaqti: har kuni 9:00–19:00. To'liq ma'lumot va xabar yuborish uchun \"Aloqa\" sahifasiga o'ting.",
+      chips: [{label: "Aloqa sahifasi →", action: "go('aloqa');toggleAI(false);"}]
     };
   }
-  if(isGreeting && !cat && !budget && !wantsBuild){
+
+  // do'kon bo'yicha savollar (yetkazish, kafolat, to'lov ...)
+  for(const f of AI_FAQ){
+    if(f.re.test(q)) return {text: f.text, chips: f.chips || [{label: "Aloqa sahifasi →", action: "go('aloqa');toggleAI(false);"}]};
+  }
+
+  // aniq mahsulot(lar) haqida
+  const found = aiFindProducts(q);
+  if(found.length >= 2){
+    const ids = found.slice(0, 3);
+    const blocks = ids.map(id => `${catalogItemInfo(id).name} — ${fmt(catalogItemInfo(id).price)}\n${aiBrief(id)}`.trim());
+    const sorted = ids.slice().sort((a, b) => catalogItemInfo(a).price - catalogItemInfo(b).price);
+    const diff = catalogItemInfo(sorted[sorted.length - 1]).price - catalogItemInfo(sorted[0]).price;
     return {
-      text:"Salom! Menga budjetingizni yoki qidirayotgan telefon turini ayting — masalan \"10 million so'mga smartfon\" yoki \"iPhone\". Tavsiya beraman.",
-      chips:[
-        {label:'Smartfonlar', action:"setFilter('Smartfonlar');go('katalog');toggleAI(false);"},
-        {label:'Aksessuarlar', action:"setFilter('Aksessuarlar');go('katalog');toggleAI(false);"},
-        {label:'Tayyor to\'plamlar', action:"go('builds');toggleAI(false);"}
-      ]
+      text: `Solishtirma:\n\n${blocks.join('\n\n')}\n\nEng arzoni — ${catalogItemInfo(sorted[0]).name} (eng qimmatidan ${fmt(diff)} arzon).`,
+      chips: [...ids.map(id => aiAddChip(id)), aiInfoChip(ids[0])]
+    };
+  }
+  if(found.length === 1){
+    const id = found[0], it = catalogItemInfo(id), info = PRODUCT_INFO[id];
+    const chips = [aiAddChip(id, "Savatga qo'shish"), aiInfoChip(id)];
+    if(/(narx|necha pul|necha so'm|necha sum|qancha turadi|qancha)/.test(q) && !AI_ATTRS.some(a => a.re.test(q))){
+      return {text: `${it.name} narxi — ${fmt(it.price)}.`, chips};
+    }
+    const attrs = AI_ATTRS.filter(a => a.re.test(q));
+    if(attrs.length && info){
+      const lines = [];
+      attrs.forEach(a => specRows(id, a.label).forEach(([k, v]) => lines.push(`• ${k}: ${v}`)));
+      if(lines.length) return {text: `${it.name} — ${attrs.map(a => a.name).join(' va ')}:\n${lines.join('\n')}`, chips};
+    }
+    return {text: aiProductCard(id), chips};
+  }
+
+  // brendlar
+  const brands = aiBrands(q);
+  if(brands.length >= 2){
+    return {
+      text: `Brendlar farqi (katalogimiz bo'yicha):\n${aiBrandSummary(brands)}\n\nByudjet va ehtiyojingizni ayting — mos modelni tanlab beraman.`,
+      chips: brands.map(b => aiAsk(BRAND_INFO[b].name.split(' ')[0] + ' modellari', BRAND_INFO[b].name.split(' ')[0] + ' telefonlari'))
+    };
+  }
+  if(brands.length === 1 && (!cat || cat === 'Smartfonlar')){
+    const b = brands[0];
+    const use = AI_USE.find(u => u.re.test(q));
+    if(use){
+      const own = use.ids.filter(id => BRAND_PHONES[b].includes(id));
+      const ids = own.length ? own : BRAND_PHONES[b];
+      return aiListReply(`${BRAND_INFO[b].name} ichida — ${use.intro.charAt(0).toLowerCase() + use.intro.slice(1)}`, ids, use.spec, budget);
+    }
+    let ids = BRAND_PHONES[b].slice().sort((x, y) => catalogItemInfo(x).price - catalogItemInfo(y).price);
+    if(budget) ids = ids.filter(id => catalogItemInfo(id).price <= budget);
+    if(ids.length){
+      return {
+        text: `${BRAND_INFO[b].name} smartfonlari:\n${ids.slice(0, 6).map(id => `• ${catalogItemInfo(id).name} — ${fmt(catalogItemInfo(id).price)}`).join('\n')}${ids.length > 6 ? '\n… va boshqalar (katalogda)' : ''}\n\n${BRAND_INFO[b].note}`,
+        chips: [...ids.slice(0, 3).map(id => aiAddChip(id)), ...ids.slice(0, 1).map(id => aiInfoChip(id))]
+      };
+    }
+  }
+
+  // tushunchalar (OLED, RAM, mAh ...)
+  if(AI_CUE.test(q)){
+    for(const c of aiConcepts()){
+      if(c.re.test(q)) return {text: c.text, chips: c.chips || []};
+    }
+  }
+
+  // telefon tanlash bo'yicha umumiy maslahat
+  if(howChoose){
+    return {
+      text: "Telefon tanlashda quyidagilarga qarang:\n1) Budjet — avval summani belgilab oling.\n2) Kamera — foto/video muhim bo'lsa Galaxy S24 Ultra, iPhone 15 Pro yoki Xiaomi 14.\n3) Xotira — 128 GB ko'pchilikka yetadi, ko'p video olsangiz 256 GB+.\n4) Batareya — 5000 mAh atrofi kun bo'yi yetadi.\n5) Tizim — oddiylik va uzoq yangilanish uchun iPhone, tanlov va narx uchun Android.\nBudjet va maqsadingizni ayting, aniq variant topib beraman.",
+      chips: [aiAsk("Kamera uchun", "Kamerasi eng yaxshi telefon"), aiAsk("O'yin uchun", "O'yin uchun qaysi telefon yaxshi?"), aiAsk("Arzon variant", "Eng arzon telefon")]
     };
   }
 
-  // budget + gaming/office intent -> recommend a BUILD
-  if(budget && (wantsGaming || wantsOffice || wantsBuild || !cat)){
-    let pool = BUILDS.slice();
-    if(wantsGaming) pool = pool.filter(b => /Kamera|Camera/i.test(b.tag+b.name));
-    if(wantsOffice) pool = pool.filter(b => /Byudjet|Start/i.test(b.tag+b.name));
-    const affordable = pool.filter(b => b.price <= budget).sort((a,b)=>b.price-a.price);
-    if(affordable.length){
-      const best = affordable[0];
-      const specsTxt = best.specs.map(([k,v])=>`${k}: ${v}`).join(', ');
-      return {
-        text:`${fmtShort(budget)} budjetga eng mos variant — "${best.name}" (${best.tag}). Narxi: ${fmt(best.price)}. Tarkibi: ${specsTxt}.`,
-        chips:[
-          {label:`Savatga — ${fmt(best.price)}`, action:`addToCart('${best.id}','${esc(best.name)}','Tayyor to\\'plam',${best.price})`},
-          {label:'Barcha to\'plamlar →', action:"go('builds');toggleAI(false);"}
-        ]
-      };
-    }
-    const cheapest = pool.sort((a,b)=>a.price-b.price)[0];
-    if(cheapest){
-      return {
-        text:`Afsuski, ${fmtShort(budget)} budjetga aniq mos tayyor to'plam yo'q. Eng yaqin arzon variant — "${cheapest.name}", narxi ${fmt(cheapest.price)}. Yoki katalogdan alohida telefon tanlashingiz mumkin.`,
-        chips:[{label:'To\'plamlarni ko\'rish →', action:"go('builds');toggleAI(false);"}]
-      };
+  // maqsadga qarab tavsiya (kamera, o'yin, batareya, talaba)
+  if(!cat || cat === 'Smartfonlar'){
+    for(const u of AI_USE){
+      if(u.re.test(q)) return aiListReply(u.intro, u.ids, u.spec, budget);
     }
   }
 
-  // category (+ optional budget)
+  // kategoriya (+ byudjet)
   if(cat){
     let list = PRODUCTS.filter(p => p.cat === cat);
     if(budget) list = list.filter(p => p.price <= budget);
-    if(wantsCheapest) list.sort((a,b)=>a.price-b.price);
-    else if(wantsPricey) list.sort((a,b)=>b.price-a.price);
-    else list.sort((a,b)=>a.price-b.price);
+    const plainPhones = cat === 'Smartfonlar' && !budget && !wantsCheapest && !wantsPricey;
+    if(plainPhones || askStyle){
+      if(cat === 'Smartfonlar'){
+        return {
+          text: "Menga budjetingizni va nima uchun kerakligini (kamera, o'yin, kundalik) ayting — mos variantni topib beraman. Hozircha mashhur tanlovlar:\n• Byudjet — Xiaomi Redmi Note 13 Pro (" + fmt(catalogItemInfo('p7').price) + ")\n• O'rta — Samsung Galaxy A55 (" + fmt(catalogItemInfo('p6').price) + ")\n• Premium — iPhone 15 Pro (" + fmt(catalogItemInfo('p2').price) + ")",
+          chips: [aiAddChip('p7'), aiAddChip('p6'), aiAddChip('p2'), aiAsk("Kamera uchun", "Kamerasi eng yaxshi telefon"), aiAsk("O'yin uchun", "O'yin uchun qaysi telefon yaxshi?")]
+        };
+      }
+    }
+    if(wantsCheapest) list.sort((a, b) => a.price - b.price);
+    else if(wantsPricey || budget) list.sort((a, b) => b.price - a.price);
+    else list.sort((a, b) => a.price - b.price);
     if(!list.length){
       return {
-        text:`${cat} bo'yicha${budget ? ' shu budjetga mos' : ''} mahsulot topilmadi. Katalogda boshqa variantlarni ko'rib chiqing.`,
-        chips:[{label:`${cat} — katalogda ko'rish →`, action:`setFilter('${cat}');go('katalog');toggleAI(false);`}]
+        text: `${cat} bo'yicha${budget ? ' shu budjetga mos' : ''} mahsulot topilmadi. Katalogda boshqa variantlarni ko'rib chiqing.`,
+        chips: [{label: `${cat} — katalogda ko'rish →`, action: `setFilter('${cat}');go('katalog');toggleAI(false);`}]
       };
     }
-    const top = list.slice(0,3);
-    const intro = wantsCheapest ? `Eng arzon ${cat} variantlari:` : wantsPricey ? `Eng kuchli ${cat} variantlari:` : `${cat} bo'yicha tavsiyalarim:`;
+    const top = list.slice(0, 3);
+    const intro = wantsCheapest ? `Eng arzon ${cat} variantlari:` : (wantsPricey ? `Eng kuchli ${cat} variantlari:` : (budget ? `${fmtShort(budget)}gacha ${cat} bo'yicha eng yaxshilari:` : `${cat} bo'yicha tavsiyalarim:`));
     return {
-      text: intro + ' ' + top.map(p=>`${p.name} — ${fmt(p.price)}`).join('; ') + '.',
-      chips: [
-        ...top.map(p=>({label:`+ ${p.name.length>22?p.name.slice(0,22)+'…':p.name}`, action:`addToCart('${p.id}','${esc(p.name)}','${p.cat}',${p.price})`})),
-        {label:`Hammasini ko'rish →`, action:`setFilter('${cat}');go('katalog');toggleAI(false);`}
-      ]
+      text: `${intro}\n${top.map(p => `• ${p.name} — ${fmt(p.price)}`).join('\n')}`,
+      chips: [...top.map(p => aiAddChip(p.id)), {label: "Hammasini ko'rish →", action: `setFilter('${cat}');go('katalog');toggleAI(false);`}]
     };
   }
 
-  if(wantsBuild || wantsGaming || wantsOffice){
-    let pool = BUILDS.slice();
-    if(wantsGaming) pool = pool.filter(b => /Kamera|Camera/i.test(b.tag+b.name));
-    if(wantsOffice) pool = pool.filter(b => /Byudjet|Start/i.test(b.tag+b.name));
-    if(!pool.length) pool = BUILDS.slice();
-    pool.sort((a,b)=> (b.featured?1:0) - (a.featured?1:0) || a.price-b.price);
-    const top = pool.slice(0,3);
+  // faqat byudjet aytilgan
+  if(budget && !wantsBuild){
+    const phones = PRODUCTS.filter(p => p.cat === 'Smartfonlar' && p.price <= budget).sort((a, b) => b.price - a.price).slice(0, 3);
+    if(phones.length){
+      return {
+        text: `${fmtShort(budget)}gacha eng yaxshi smartfonlar:\n${phones.map(p => `• ${p.name} — ${fmt(p.price)}`).join('\n')}`,
+        chips: [...phones.map(p => aiAddChip(p.id)), {label: "To'plamlarni ko'rish →", action: "go('builds');toggleAI(false);"}]
+      };
+    }
+    const cheapest = PRODUCTS.filter(p => p.cat === 'Smartfonlar').sort((a, b) => a.price - b.price)[0];
     return {
-      text:"Tayyor to'plamlardan tavsiyalarim: " + top.map(b=>`${b.name} (${fmt(b.price)})`).join('; ') + '.',
-      chips:[
-        ...top.map(b=>({label:`+ ${b.name}`, action:`addToCart('${b.id}','${esc(b.name)}','Tayyor to\\'plam',${b.price})`})),
-        {label:'Barchasini ko\'rish →', action:"go('builds');toggleAI(false);"}
-      ]
+      text: `${fmtShort(budget)} budjetga smartfon topilmadi. Eng arzon smartfonimiz — ${cheapest.name}, narxi ${fmt(cheapest.price)}.`,
+      chips: [aiAddChip(cheapest.id), aiInfoChip(cheapest.id)]
+    };
+  }
+
+  // tayyor to'plamlar
+  if(wantsBuild){
+    let pool = BUILDS.slice();
+    if(budget) pool = pool.filter(b => b.price <= budget);
+    if(!pool.length) pool = BUILDS.slice().sort((a, b) => a.price - b.price).slice(0, 1);
+    pool.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.price - b.price);
+    const top = pool.slice(0, 3);
+    return {
+      text: `Tayyor to'plamlardan tavsiyalarim:\n${top.map(b => `• ${b.name} (${b.tag}) — ${fmt(b.price)}`).join('\n')}`,
+      chips: [...top.map(b => aiAddChip(b.id, '+ ' + b.name)), {label: "Barchasini ko'rish →", action: "go('builds');toggleAI(false);"}]
+    };
+  }
+
+  if(isGreeting){
+    return {
+      text: "Salom! Men PHONEX'ning AI yordamchisiman. Telefonlar haqida so'rashingiz mumkin: narx, kamera, batareya, solishtirish yoki budjetga mos variant.",
+      chips: AI_QUICK.slice(0, 4).map(x => aiAsk(x))
+    };
+  }
+  if(askStyle){
+    return {
+      text: "Menga budjetingizni va nima uchun kerakligini (kamera, o'yin, kundalik) ayting — mos telefonni topib beraman.",
+      chips: AI_QUICK.slice(0, 4).map(x => aiAsk(x))
     };
   }
 
   return {
-    text:"To'liq tushunmadim 🙂 Menga budjetingizni (masalan \"10 million so'm\") va nima kerakligini (smartfon, planshet, aksessuar va h.k.) ayting — mos variantlarni topib beraman.",
-    chips:[
-      {label:'Smartfonlar', action:"setFilter('Smartfonlar');go('katalog');toggleAI(false);"},
-      {label:'Tayyor to\'plamlar', action:"go('builds');toggleAI(false);"},
-      {label:'Aloqa', action:"go('aloqa');toggleAI(false);"}
-    ]
+    text: "To'liq tushunmadim 🙂 Telefon nomini (masalan \"iPhone 15 kamerasi\"), budjetingizni (\"10 million so'm\") yoki maqsadingizni (\"o'yin uchun\") ayting. Yetkazib berish, kafolat va to'lov haqida ham so'rashingiz mumkin.",
+    chips: AI_QUICK.slice(0, 4).map(x => aiAsk(x))
   };
 }
 
-function toggleAI(open){ document.getElementById('aiPanel').classList.toggle('open', open); }
+const AI_QUICK = [
+  "Kamerasi eng yaxshi telefon",
+  "iPhone 15 va Galaxy S24 farqi",
+  "10 million so'mgacha smartfon",
+  "O'yin uchun qaysi telefon yaxshi?",
+  "Yetkazib berish qanday?"
+];
+function aiSay(text, chips){
+  const body = document.getElementById('aiBody');
+  body.insertAdjacentHTML('beforeend', '<div class="ai-msg bot"></div>');
+  body.lastElementChild.textContent = text;
+  if(chips && chips.length) body.insertAdjacentHTML('beforeend', `<div class="ai-msg bot" style="padding:0;background:none;border:none;">${chipHTML(chips)}</div>`);
+  body.scrollTop = body.scrollHeight;
+}
+function aiAdd(id){
+  const it = catalogItemInfo(id);
+  if(!it) return;
+  addToCart(it.id, it.name, it.cat, it.price);
+  aiSay(`"${it.name}" savatga qo'shildi. Savatda ${cartCount()} ta mahsulot bor.`, [
+    {label: "Savatni ochish →", action: "go('savat');toggleAI(false);"},
+    aiAsk("Yana tanlash", "Yana telefon tavsiya qiling")
+  ]);
+}
+function sendAIText(text){
+  const input = document.getElementById('aiInput');
+  input.value = text;
+  sendAI();
+}
+
+function toggleAI(open){
+  const panel = document.getElementById('aiPanel');
+  const isOpen = open === undefined ? !panel.classList.contains('open') : !!open;
+  panel.classList.toggle('open', isOpen);
+  panel.setAttribute('aria-hidden', String(!isOpen));
+  const bd = document.getElementById('aiBackdrop'); if(bd) bd.classList.toggle('show', isOpen);
+  const fab = document.getElementById('aiFab'); if(fab) fab.classList.toggle('away', isOpen);
+  if(isOpen && window.matchMedia('(min-width:861px)').matches){
+    setTimeout(() => { const i = document.getElementById('aiInput'); if(i) i.focus({preventScroll:true}); }, 340);
+  }
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') toggleAI(false); });
 document.getElementById('aiFab').addEventListener('click', () => toggleAI(!document.getElementById('aiPanel').classList.contains('open')));
 
 function revealText(el, text, onDone){
@@ -1536,6 +2217,78 @@ function finishOrder(num){
   setTimeout(() => { coPaid = null; }, 100);
 }
 
+(function(){
+  const body = document.getElementById('aiBody');
+  if(!body) return;
+  body.insertAdjacentHTML('beforeend', `<div class="ai-msg bot" style="padding:0;background:none;border:none;">${chipHTML(AI_QUICK.map(x => aiAsk(x)))}</div>`);
+})();
+
+/* ---------------- profil rasmi (yuklash / almashtirish / o'chirish) ---------------- */
+function avatarInner(user, big){
+  if(user && user.avatar) return `<img src="${user.avatar}" alt="">`;
+  if(big) return `<svg class="av-default" viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="38" r="17"/><path d="M14 94c2-21 16-31 34-31s32 10 34 31z"/></svg>`;
+  return ((user && user.name) || '?').trim().charAt(0).toUpperCase();
+}
+const AV_COLORS = [['#FF8A65','#E8543C'],['#2DD4BF','#0F9D8C'],['#8C87FF','#5B54E6'],['#F5D061','#E0A526'],['#F0776C','#C2413A'],['#4CC98A','#2E9E5B'],['#60A5FA','#2563EB'],['#F472B6','#DB2777']];
+const AV_SHAPES = [
+  b => `<circle cx='48' cy='38' r='17' fill='#fff'/><path d='M14 94c2-21 16-31 34-31s32 10 34 31z' fill='#fff'/>`,
+  b => `<rect x='24' y='32' width='48' height='40' rx='11' fill='#fff'/><circle cx='38' cy='50' r='5.5' fill='${b}'/><circle cx='58' cy='50' r='5.5' fill='${b}'/><rect x='38' y='61' width='20' height='4' rx='2' fill='${b}'/><rect x='46' y='20' width='4' height='12' fill='#fff'/><circle cx='48' cy='18' r='5' fill='#fff'/>`,
+  b => `<path d='M24 46 L26 20 L44 34Z M72 46 L70 20 L52 34Z' fill='#fff'/><circle cx='48' cy='54' r='25' fill='#fff'/><circle cx='39' cy='50' r='4' fill='${b}'/><circle cx='57' cy='50' r='4' fill='${b}'/><path d='M44 60 L48 64 L52 60Z' fill='${b}'/>`,
+  b => `<rect x='31' y='15' width='34' height='66' rx='9' fill='#fff'/><rect x='35' y='22' width='26' height='46' rx='3' fill='${b}' opacity='.35'/><circle cx='48' cy='74' r='3' fill='${b}'/>`,
+  b => `<circle cx='48' cy='48' r='29' fill='#fff'/><rect x='30' y='41' width='15' height='9' rx='4' fill='${b}'/><rect x='51' y='41' width='15' height='9' rx='4' fill='${b}'/><path d='M36 60 Q48 72 60 60' stroke='${b}' stroke-width='4' fill='none' stroke-linecap='round'/>`,
+  b => `<circle cx='28' cy='28' r='10' fill='#fff'/><circle cx='68' cy='28' r='10' fill='#fff'/><circle cx='48' cy='52' r='26' fill='#fff'/><circle cx='39' cy='48' r='3.5' fill='${b}'/><circle cx='57' cy='48' r='3.5' fill='${b}'/><circle cx='48' cy='58' r='3.5' fill='${b}'/>`,
+  b => `<path d='M54 12 L28 52 H45 L40 84 L69 40 H52Z' fill='#fff'/>`,
+  b => `<path d='M48 12 L58 36 L84 38 L64 55 L71 82 L48 68 L25 82 L32 55 L12 38 L38 36Z' fill='#fff'/>`
+];
+const AV_PRESETS = AV_COLORS.map(([a, b], i) => {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${a}'/><stop offset='1' stop-color='${b}'/></linearGradient></defs><rect width='96' height='96' fill='url(#g)'/>${AV_SHAPES[i](b)}</svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+});
+function pickPreset(i){
+  if(!auth || !AV_PRESETS[i]) return;
+  setAvatar(AV_PRESETS[i], 'av_saved');
+}
+function pickAvatar(){
+  if(!auth){ toast(t('login_first'), 'error'); return; }
+  const inp = document.getElementById('avatarInput');
+  if(inp) inp.click();
+}
+function onAvatarFile(input){
+  const file = input.files && input.files[0];
+  input.value = '';
+  if(!file || !auth) return;
+  if(!/^image\//.test(file.type)){ toast(t('av_err_type'), 'error'); return; }
+  if(file.size > 10 * 1024 * 1024){ toast(t('av_err_size'), 'error'); return; }
+  const reader = new FileReader();
+  reader.onerror = () => toast(t('av_err_read'), 'error');
+  reader.onload = () => {
+    const img = new Image();
+    img.onerror = () => toast(t('av_err_read'), 'error');
+    img.onload = () => {
+      const S = 256;
+      const c = document.createElement('canvas');
+      c.width = c.height = S;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, S, S);
+      const side = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
+      setAvatar(c.toDataURL('image/jpeg', 0.88), 'av_saved');
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function setAvatar(dataUrl, msgKey){
+  if(!auth) return;
+  if(dataUrl) auth.avatar = dataUrl; else delete auth.avatar;
+  saveUser(auth);
+  saveJSON('phonex_auth', auth);
+  renderProfile();
+  toast(t(msgKey));
+}
+function removeAvatar(){ setAvatar('', 'av_removed'); }
+
 /* ---------------- init ---------------- */
 applyTheme();
 applyI18n();
@@ -1547,6 +2300,7 @@ syncSettingsUI();
 renderFilters();
 renderProducts();
 renderHomeCats();
+renderHeroPhotos();
 renderBuilds();
 updateCartBadge();
 updateFavBadge();
